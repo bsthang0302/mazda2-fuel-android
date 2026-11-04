@@ -1,0 +1,927 @@
+{
+  "fuelRecords" : [
+    {
+      "liters" : 19.68503937007874,
+      "stationName" : "Petrolimex CHXD 101 Cao Lãnh",
+      "id" : "0D515030-B4D2-49E2-9F5A-11E38212C7B1",
+      "totalCost" : 500000,
+      "pricePerLiter" : 25400,
+      "date" : "2026-11-01T08:48:11Z",
+      "tripKm" : 0,
+      "odo" : 1200
+    },
+    {
+      "liters" : 15.748031496062993,
+      "stationName" : "Cây xăng khác",
+      "id" : "E3B382B7-108B-4E1D-8301-000530693497",
+      "fuelEfficiency" : 1.7497812773403325,
+      "totalCost" : 400000,
+      "pricePerLiter" : 25400,
+      "date" : "2026-10-28T12:01:30Z",
+      "tripKm" : 900,
+      "odo" : 1200
+    },
+    {
+      "liters" : 18.34862385321101,
+      "stationName" : "Cây xăng khác",
+      "id" : "D3B0B15B-7BB3-4D5C-8423-C048E04CB1A0",
+      "totalCost" : 500000,
+      "pricePerLiter" : 27250,
+      "date" : "2026-10-22T12:07:17Z",
+      "tripKm" : 0,
+      "odo" : 300
+    },
+    {
+      "liters" : 7.339449541284404,
+      "stationName" : "Cây xăng khác",
+      "id" : "920B189E-21BA-4367-80CA-212EDF664E47",
+      "totalCost" : 200000,
+      "pricePerLiter" : 27250,
+      "date" : "2026-10-18T01:57:25Z",
+      "tripKm" : 0,
+      "odo" : 300
+    },
+    {
+      "liters" : 34.71017007983339,
+      "stationName" : "Cây xăng khác",
+      "id" : "BBCAD7A1-541C-400B-8A56-D2D8D9413176",
+      "totalCost" : 1000000,
+      "pricePerLiter" : 28810,
+      "date" : "2026-10-14T02:47:04Z",
+      "odo" : 300
+    }
+  ],
+  "maintenanceRecords" : [
+
+  ],
+  "mechanicalComponents" : [
+    {
+      "groupName" : "Chất lỏng & Dung dịch",
+      "id" : "64786E2F-1E90-41B3-95F0-C6FC65FBEC54",
+      "intervalKm" : 5000,
+      "intervalTime" : "6 tháng",
+      "name" : "Dầu động cơ (Nhớt máy SkyActiv)",
+      "function" : "Bôi trơn pít-tông, làm mát và làm sạch cặn buồng đốt tỷ số nén cao 13:1.",
+      "spec" : "Mazda Castrol SkyActiv 0W-20 \/ 5W-30 (Dung tích 3.8 Lít)",
+      "warningNote" : "Chỉ cần thay nhớt và long-đền ốc xả. Dứt khoát từ chối các chai phụ gia súc rửa động cơ, phụ gia nano bảo vệ máy vẽ thêm (350k - 500k)."
+    },
+    {
+      "groupName" : "Chất lỏng & Dung dịch",
+      "id" : "65054D57-831E-425A-8C34-B68974859092",
+      "intervalKm" : 40000,
+      "intervalTime" : "2 năm",
+      "name" : "Dầu phanh (Dầu thắng thủy lực)",
+      "function" : "Truyền lực từ bàn đạp tới 4 cùm phanh. Dầu phanh hút ẩm theo thời gian làm giảm nhiệt độ sôi, dễ gây mất phanh.",
+      "spec" : "Chuẩn DOT 4 (Dung tích ~1 Lít)",
+      "warningNote" : "Sau đúng 2 năm hoặc 40.000km mới cần thay mới toàn bộ. Dưới 2 năm không cần thay sớm."
+    },
+    {
+      "groupName" : "Chất lỏng & Dung dịch",
+      "id" : "BFD4AEC9-6A24-4F56-9689-48884FE38B3A",
+      "intervalKm" : 100000,
+      "intervalTime" : "5 năm",
+      "name" : "Dầu hộp số tự động 6AT",
+      "function" : "Bôi trơn bánh răng hành tinh và điều khiển áp suất đóng ly hợp khóa biến mô (lock-up clutch).",
+      "spec" : "Mazda ATF-FZ chính hãng chuyên dụng cho SkyActiv-Drive",
+      "warningNote" : "Hộp số 6AT của Mazda dùng dầu tuổi thọ cao. Tuyệt đối không thay ở mốc 20k hay 40k km (vẽ thêm 2 - 3 triệu)."
+    },
+    {
+      "groupName" : "Chất lỏng & Dung dịch",
+      "id" : "467EE24D-0705-4F93-A711-AD0C1BFF3757",
+      "intervalKm" : 100000,
+      "intervalTime" : "5 năm",
+      "name" : "Nước làm mát động cơ",
+      "function" : "Giải nhiệt khoang động cơ, chống đóng cặn rỉ sét đường ống nhôm.",
+      "spec" : "Mazda Super Coolant FL22 (Màu xanh lục)",
+      "warningNote" : "FL22 là loại siêu bền tuổi thọ 100.000km \/ 5 năm. Chỉ cần châm thêm nếu bình phụ hao hụt, không súc xả sớm."
+    },
+    {
+      "groupName" : "Chất lỏng & Dung dịch",
+      "id" : "D717D63A-5C3D-4094-A19B-FA486CE663CA",
+      "intervalKm" : 5000,
+      "intervalTime" : "Định kỳ khi cạn",
+      "name" : "Nước rửa kính ô tô",
+      "function" : "Làm sạch bụi đường, xác côn trùng và dầu mỡ bám trên kính lái.",
+      "spec" : "Nước rửa kính chuyên dụng pha cồn hữu cơ",
+      "warningNote" : "Không dùng nước lã xà phòng rửa chén đổ vào bình vì sẽ làm nghẹt vòi phun và đóng vôi ố kính lái."
+    },
+    {
+      "groupName" : "Chất lỏng & Dung dịch",
+      "id" : "CECE58C6-CDD1-448D-9E34-0F9CE2104ABB",
+      "intervalKm" : 10000,
+      "intervalTime" : "6 tháng",
+      "name" : "Phụ gia vệ sinh kim phun GDI (Deposit Cleaner)",
+      "function" : "Hòa tan cặn carbon và cặn lưu huỳnh sinh ra từ xăng RON 95-III bám ở đầu kim phun trực tiếp GDI tỷ số nén 13:1.",
+      "spec" : "Mazda Deposit Cleaner \/ Chevron Techron Concentrate Plus",
+      "warningNote" : "Xe chạy xăng RON 95-III (150 ppm lưu huỳnh), định kỳ mỗi 1 vạn km tự mua 1 chai (~200k) đổ vào bình xăng trước khi bơm đầy. Không cần làm các gói súc buồng đốt tiền triệu ở hãng."
+    },
+    {
+      "groupName" : "Hệ thống lọc",
+      "id" : "3086B466-4356-44D3-8BFC-EF53DD5768DB",
+      "intervalKm" : 10000,
+      "intervalTime" : "12 tháng",
+      "name" : "Lọc dầu động cơ (Lọc nhớt)",
+      "function" : "Lọc giữ lại mạt kim loại và cặn bùn nhớt trước khi bơm vào trục khuỷu.",
+      "spec" : "Lọc dầu giấy xếp chính hãng Mazda (Mã PE01-14-302A)",
+      "warningNote" : "Quy tắc chuẩn: 2 lần thay nhớt = 1 lần thay lọc nhớt (mỗi 10.000km thay một lần)."
+    },
+    {
+      "groupName" : "Hệ thống lọc",
+      "id" : "AA3DC78F-A384-481C-9D06-477232D0525D",
+      "intervalKm" : 20000,
+      "intervalTime" : "12 tháng",
+      "name" : "Lọc gió động cơ (Khí nạp)",
+      "function" : "Lọc sạch bụi cát trong không khí trước khi đưa vào buồng đốt.",
+      "spec" : "Lọc gió giấy khô nguyên bản Mazda 2",
+      "warningNote" : "Ở mốc 10.000km chỉ cần tháo ra dùng súng xịt khí thổi sạch bụi, đến 20.000km mới cần thay mới."
+    },
+    {
+      "groupName" : "Hệ thống lọc",
+      "id" : "FF5EACCD-4953-428B-A134-1DC194B76042",
+      "intervalKm" : 20000,
+      "intervalTime" : "12 tháng",
+      "name" : "Lọc gió máy lạnh (Lọc cabin)",
+      "function" : "Lọc bụi mịn PM2.5, phấn hoa và mùi hôi bên ngoài trước khi gió thổi vào khoang xe.",
+      "spec" : "Lọc gió than hoạt tính cabin",
+      "warningNote" : "Nếu thấy gió điều hòa có mùi hôi hoặc yếu gió thì tự mua lọc trên Shopee (~120k) thay trong 2 phút."
+    },
+    {
+      "groupName" : "Hệ thống lọc",
+      "id" : "C5522808-3CB9-4A65-A18E-32E157E7EC02",
+      "intervalKm" : 40000,
+      "intervalTime" : "24 tháng",
+      "name" : "Lọc nhiên liệu (Lọc xăng)",
+      "function" : "Ngăn cặn bẩn trong bình xăng đi vào bơm cao áp và kim phun trực tiếp GDI.",
+      "spec" : "Cụm lọc xăng tinh đặt trong bình nhiên liệu",
+      "warningNote" : "Chạy xăng RON 95-III (hàm lượng lưu huỳnh 150 ppm gấp 15 lần mức V), lọc xăng phải giữ lại nhiều cặn bẩn hơn. Đúng mốc 40.000 - 60.000km bắt buộc phải thay mới để bảo vệ bơm cao áp SkyActiv GDI."
+    },
+    {
+      "groupName" : "Bánh xe & Phanh",
+      "id" : "6A751B03-07B6-47EE-8511-695E3C731088",
+      "intervalKm" : 10000,
+      "intervalTime" : "6 tháng",
+      "name" : "Đảo lốp 4 bánh & Cân bằng mâm",
+      "function" : "Giúp 4 lốp mòn đều gai, triệt tiêu tiếng hú gợn sóng lốp và tăng tuổi thọ lốp xe.",
+      "spec" : "Đảo chéo hoặc đảo thẳng trước - sau theo khuyến cáo Mazda",
+      "warningNote" : "Chỉ đảo lốp và cân mâm kẹp chì (~150k). Không cần làm cân chỉnh góc đặt bánh xe 3D nếu xe chạy thẳng không lệch lái."
+    },
+    {
+      "groupName" : "Bánh xe & Phanh",
+      "id" : "513E6FCA-10F3-46E2-B5F1-887B7E8C1F79",
+      "intervalKm" : 20000,
+      "intervalTime" : "12 tháng",
+      "name" : "Bảo dưỡng cùm phanh & Tra mỡ ắc phanh",
+      "function" : "Vệ sinh mạt bố phanh, tra mỡ vào ắc trượt giúp cùm phanh nhả êm, không bị bó phanh hay rít phanh.",
+      "spec" : "Mỡ bò chịu nhiệt chuyên dụng cho ắc phanh đĩa (Silicone brake grease)",
+      "warningNote" : "Bắt buộc làm ở mốc 20.000km sau mùa mưa lũ miền Tây để tránh gỉ sét kẹt ắc thắng."
+    },
+    {
+      "groupName" : "Bánh xe & Phanh",
+      "id" : "1413B9A8-3631-4F60-8717-1E90B75EF536",
+      "intervalKm" : 50000,
+      "intervalTime" : "Khi độ dày < 3mm",
+      "name" : "Bố thắng (Má phanh đĩa trước\/sau)",
+      "function" : "Tạo ma sát ép vào đĩa phanh để dừng xe an toàn.",
+      "spec" : "Má phanh bán kim loại chính hãng",
+      "warningNote" : "Kiểm tra độ dày thực tế. Nếu má phanh còn dày trên 4-5mm thì tuyệt đối chưa cần thay sớm."
+    },
+    {
+      "groupName" : "Bánh xe & Phanh",
+      "id" : "51348299-05F1-4B95-9FF6-A9BF068507A2",
+      "intervalKm" : 65000,
+      "intervalTime" : "3 - 5 năm",
+      "name" : "Bộ 4 lốp xe (Vỏ xe)",
+      "function" : "Tiếp xúc mặt đường, đảm bảo bám đường khi trời mưa trơn trượt.",
+      "spec" : "Lốp 185\/65 R15 (bản AT tiêu chuẩn mâm 15 inch lốp dày)",
+      "warningNote" : "Khi gai lốp mòn tới vạch chỉ thị gờ cao su hoặc lốp bị rạn chân chim sau 4-5 năm thì thay cả bộ 4 lốp."
+    },
+    {
+      "groupName" : "Đánh lửa & Điện",
+      "id" : "6565C0E6-6E5C-4FDE-8B5B-E26679BF6974",
+      "intervalKm" : 60000,
+      "intervalTime" : "3 năm",
+      "name" : "Bugi đánh lửa Iridium",
+      "function" : "Tạo tia lửa điện kích nổ hòa khí tỷ số nén 13:1.",
+      "spec" : "Bugi kim loại hiếm Iridium cao cấp (Mã NGK \/ Denso theo xe)",
+      "warningNote" : "Xe dùng xăng RON 95-III muội carbon bám nhiều hơn mức V. Cần tháo kiểm tra và vệ sinh ở mốc 40.000km, nếu mòn điện cực thì thay mới ở 60.000km (thay vì 100.000km như khi chạy xăng Euro 5)."
+    },
+    {
+      "groupName" : "Đánh lửa & Điện",
+      "id" : "EB2A6140-5C57-48C2-8395-761FB3D506D8",
+      "intervalKm" : 40000,
+      "intervalTime" : "2 năm",
+      "name" : "Cảm biến Oxy (O2 Sensor) & Bộ xúc tác",
+      "function" : "Đo tỷ lệ oxy dư trong khí xả để ECU tối ưu phun nhiên liệu, giúp xe không bị hao xăng.",
+      "spec" : "Cảm biến Oxy khí xả chính hãng Mazda",
+      "warningNote" : "Lưu huỳnh trong xăng RON 95-III dễ bám muội làm sai lệch cảm biến. Định kỳ 40.000km yêu cầu xịt vệ sinh sạch sẽ bằng dung dịch chuyên dụng."
+    },
+    {
+      "groupName" : "Đánh lửa & Điện",
+      "id" : "1187AA8D-C3D5-45C5-9AA3-52CA5DE06A20",
+      "intervalKm" : 60000,
+      "intervalTime" : "2.5 - 3 năm",
+      "name" : "Bình Ắc-quy 12V (Khởi động)",
+      "function" : "Cung cấp nguồn điện đề nổ động cơ và duy trì hệ thống điện tử khi tắt máy.",
+      "spec" : "Ắc quy GS \/ Đồng Nai 12V 45Ah - 50Ah",
+      "warningNote" : "Theo dõi nếu buổi sáng đề máy nghe tiếng mô-tơ quay hơi kéo dài hoặc đo sụt áp dưới 12V thì thay mới."
+    },
+    {
+      "groupName" : "Đánh lửa & Điện",
+      "id" : "34C1CCC1-C616-4615-9A22-88F60DAFCF63",
+      "intervalKm" : 80000,
+      "intervalTime" : "4 năm",
+      "name" : "Dây curoa tổng (Dây curoa máy phát & lốc lạnh)",
+      "function" : "Dẫn động máy phát điện, bơm nước làm mát và lốc nén điều hòa không khí.",
+      "spec" : "Dây curoa rãnh gân EPDM chịu nhiệt cao",
+      "warningNote" : "Mỗi kỳ bảo dưỡng kỹ thuật viên sẽ soi đèn kiểm tra xem có vết rạn nứt chân rãnh không. Nếu nứt mới cần thay."
+    }
+  ],
+  "fuelPricePeriods" : [
+    {
+      "note" : "Kỳ điều hành 22\/10\/2026 (Giảm mạnh 1.850đ\/L)",
+      "effectiveDate" : "2026-10-22T08:00:00Z",
+      "priceZone1" : 24910,
+      "id" : "F1DE86D5-5BD0-4E78-B144-43B216F8EFE2",
+      "priceZone2" : 25400
+    },
+    {
+      "note" : "Kỳ điều hành 15\/10\/2026 (Petrolimex giảm 300đ\/L)",
+      "effectiveDate" : "2026-10-15T08:00:00Z",
+      "priceZone1" : 26720,
+      "id" : "0A4F40E0-F7DD-47A2-BB66-11A0ACB5C088",
+      "priceZone2" : 27250
+    },
+    {
+      "note" : "Kỳ điều hành 08\/10\/2026",
+      "effectiveDate" : "2026-10-08T08:00:00Z",
+      "priceZone1" : 28250,
+      "id" : "04CCD8F5-E2F8-4DD2-9642-74DB605E56CB",
+      "priceZone2" : 28810
+    },
+    {
+      "note" : "Kỳ điều hành 01\/10\/2026",
+      "effectiveDate" : "2026-10-01T08:00:00Z",
+      "priceZone1" : 28250,
+      "id" : "E1242E19-2320-4146-BAFD-10700F2AEE98",
+      "priceZone2" : 28810
+    },
+    {
+      "note" : "Kỳ điều hành 24\/09\/2026",
+      "effectiveDate" : "2026-09-24T08:00:00Z",
+      "priceZone1" : 27670,
+      "id" : "41A5931E-9E71-4745-9CE6-BD0478621247",
+      "priceZone2" : 28220
+    },
+    {
+      "note" : "Kỳ điều hành 17\/09\/2026",
+      "effectiveDate" : "2026-09-17T08:00:00Z",
+      "priceZone1" : 27300,
+      "id" : "55D97A48-C026-4B7C-8762-BE860860C0FF",
+      "priceZone2" : 27850
+    },
+    {
+      "note" : "Kỳ điều hành 10\/09\/2026",
+      "effectiveDate" : "2026-09-10T08:00:00Z",
+      "priceZone1" : 26960,
+      "id" : "DED0D793-BB59-4627-9970-FFD4A02BE6D5",
+      "priceZone2" : 27500
+    },
+    {
+      "note" : "Kỳ điều hành 01\/09\/2026",
+      "effectiveDate" : "2026-09-01T08:00:00Z",
+      "priceZone1" : 27050,
+      "id" : "54408F3C-C54C-4412-BB54-D7C67F3A164D",
+      "priceZone2" : 27600
+    }
+  ],
+  "milestones" : [
+    {
+      "id" : "200C865F-8024-4C6A-B964-3148B0420D28",
+      "requiredItems" : [
+        {
+          "cost" : 0,
+          "name" : "Kiểm tra siết ốc gầm bệ & hệ thống treo",
+          "id" : "406F0FA8-E8FF-4317-8A51-9FA3154AFBB3",
+          "detail" : "Kỹ thuật viên nâng cầu siết lại ốc gầm sau 1.000km rodai"
+        },
+        {
+          "cost" : 0,
+          "name" : "Kiểm tra mức dầu phanh, dầu máy, nước làm mát",
+          "id" : "8B955701-EE62-49D3-9C74-C43652AA6817",
+          "detail" : "Kiểm tra xem có rò rỉ chất lỏng trong khoang máy không"
+        },
+        {
+          "cost" : 0,
+          "name" : "Quét lỗi hệ thống điện tử SkyActiv bằng máy chuyên dụng",
+          "id" : "CDBACEC7-4505-43E9-A7DA-0D687B9B7EE2",
+          "detail" : "Cắm cổng chẩn đoán kiểm tra hệ thống phun xăng và hộp số"
+        }
+      ],
+      "title" : "Mốc 1.000 KM (Kiểm tra đầu tiên)",
+      "freeLaborNote" : "Thaco MIỄN PHÍ 100% tiền công theo chính sách khuyến mãi",
+      "standardCostEstimate" : 0,
+      "levelName" : "Kiểm tra kỹ thuật sơ bộ",
+      "km" : 1000,
+      "isFreeLabor" : true,
+      "predatoryItems" : [
+        {
+          "cost" : 350000,
+          "name" : "Phụ gia súc rửa động cơ mới",
+          "id" : "BF9DC885-4209-49CD-BDD7-C67F3B3BD741",
+          "detail" : "Xe mới đập hộp máy sạch tinh, hoàn toàn không có muội than hay cặn bẩn để súc!"
+        },
+        {
+          "cost" : 750000,
+          "name" : "Yêu cầu thay dầu máy sớm ở 1.000km",
+          "id" : "10BF45F8-C355-40F8-AC8A-17DB672569A7",
+          "detail" : "Dầu động cơ xuất xưởng của Mazda là dầu tổng hợp cao cấp đi chuẩn 5.000km mới cần thay."
+        }
+      ],
+      "scriptToAdvisor" : "Em ơi, mốc 1.000km này anh chỉ làm đúng quy trình kiểm tra tổng thể miễn phí theo sổ bảo hành thôi nhé. Không thay nhớt và không thêm bất kỳ dung dịch phụ gia nào cả.",
+      "predatoryCostEstimate" : 1100000
+    },
+    {
+      "id" : "39D9DD3B-9E69-4F2E-B67D-B4C96A49B725",
+      "requiredItems" : [
+        {
+          "cost" : 550000,
+          "name" : "Thay dầu động cơ Mazda Castrol 0W-20 \/ 5W-30 (~3.8 Lít)",
+          "id" : "CA0C8CDF-373D-46DF-9229-EF3BBC35D87E",
+          "detail" : "Dầu tổng hợp chính hãng Thaco chuyên dụng cho động cơ SkyActiv"
+        },
+        {
+          "cost" : 15000,
+          "name" : "Thay vòng đệm (long-đền) ốc xả nhớt đáy các-te",
+          "id" : "209F1EB1-6247-415A-B4A4-1EB0C14F22B8",
+          "detail" : "Bắt buộc thay mới mỗi lần xả nhớt để chống rò rỉ"
+        },
+        {
+          "cost" : 50000,
+          "name" : "Kiểm tra áp suất lốp & châm nước rửa kính",
+          "id" : "FEFCEB3F-7F41-4C2F-834A-F36163A2D11E",
+          "detail" : "Cân chỉnh 4 bánh 2.2 - 2.3 bar"
+        },
+        {
+          "cost" : 180000,
+          "name" : "Tiền công bảo dưỡng cấp 1",
+          "id" : "D7CD91A2-1348-433C-896A-A4F9C1421C19",
+          "detail" : "Công thay nhớt và kiểm tra 20 hạng mục an toàn"
+        }
+      ],
+      "title" : "Mốc 5.000 KM (Bảo dưỡng Cấp 1)",
+      "freeLaborNote" : "Tiền công khoảng 150.000 - 200.000 đ",
+      "standardCostEstimate" : 795000,
+      "levelName" : "Bảo dưỡng nhỏ định kỳ",
+      "isFreeLabor" : false,
+      "km" : 5000,
+      "predatoryItems" : [
+        {
+          "cost" : 280000,
+          "name" : "Dung dịch vệ sinh kim phun buồng đốt (đổ bình xăng)",
+          "id" : "59B76384-F876-430B-84AF-A0927C4D2442",
+          "detail" : "Xe mới chạy 5.000km kim phun còn mới tinh, chưa hề bám muội!"
+        },
+        {
+          "cost" : 350000,
+          "name" : "Phụ gia nano bảo vệ nhớt động cơ",
+          "id" : "34AB3186-C74C-4520-9EDB-DB1A7D0709AD",
+          "detail" : "Nhớt Mazda chính hãng đã có đầy đủ hệ phụ gia bôi trơn tối ưu, đổ thêm phụ gia ngoài có thể làm biến tính nhớt."
+        },
+        {
+          "cost" : 320000,
+          "name" : "Xịt dung dịch khử khuẩn \/ vệ sinh dàn lạnh",
+          "id" : "E49E8303-977D-401B-A7B0-D2C670215F6D",
+          "detail" : "Dàn lạnh xe mới tinh, chỉ cần giữ xe sạch là không có vi khuẩn."
+        }
+      ],
+      "scriptToAdvisor" : "Anh làm bảo dưỡng cấp 5.000km chuẩn: thay dầu máy 0W-20, thay long-đền ốc xả và kiểm tra gầm. Bỏ hết các chai phụ gia súc béc và khử mùi dàn lạnh ra khỏi phiếu báo giá cho anh.",
+      "predatoryCostEstimate" : 1745000
+    },
+    {
+      "id" : "9229B9C8-6505-4D6D-81E4-567FD35FE37E",
+      "requiredItems" : [
+        {
+          "cost" : 550000,
+          "name" : "Thay dầu động cơ Mazda 0W-20 (~3.8 Lít)",
+          "id" : "16A38DD5-DBAB-4885-9FC8-D44B31A19D78",
+          "detail" : "Nhớt mới bôi trơn êm ái"
+        },
+        {
+          "cost" : 165000,
+          "name" : "Thay lọc dầu (lọc nhớt) chính hãng Mazda",
+          "id" : "DE451BE7-E1E5-4CE1-B705-BC6448C07094",
+          "detail" : "Bắt buộc thay sau mỗi 10.000km để bảo vệ bơm nhớt"
+        },
+        {
+          "cost" : 15000,
+          "name" : "Thay vòng đệm ốc xả nhớt",
+          "id" : "F0A97AC9-0810-4CD6-B9EA-2FCD7C80E43C",
+          "detail" : "Chống xì dầu đáy cacte"
+        },
+        {
+          "cost" : 150000,
+          "name" : "Đảo lốp 4 bánh & cân bằng động",
+          "id" : "192C6A06-9D32-47F6-974E-0127B9CCC220",
+          "detail" : "Giúp 4 lốp mòn đều, kéo dài tuổi thọ lốp"
+        },
+        {
+          "cost" : 50000,
+          "name" : "Vệ sinh lọc gió động cơ & lọc gió điều hòa (thổi bụi)",
+          "id" : "4A9761F8-DD4D-4C9E-AD32-B3E7BF4112F3",
+          "detail" : "Chưa cần thay mới, chỉ cần dùng súng xịt khí thổi sạch bụi bẩn"
+        },
+        {
+          "cost" : 200000,
+          "name" : "Đổ 1 chai dung dịch làm sạch kim phun GDI (Do dùng xăng RON 95-III)",
+          "id" : "92686B59-CB55-4341-844F-579F1A679128",
+          "detail" : "Xăng Euro 3 lưu huỳnh 150ppm dễ bám muội. Tự đổ 1 chai Techron \/ Mazda Deposit Cleaner vào bình xăng"
+        },
+        {
+          "cost" : 280000,
+          "name" : "Tiền công bảo dưỡng cấp 2",
+          "id" : "3F054990-EB9A-4AA8-9A05-78CADB1232E4",
+          "detail" : "Công kiểm tra phanh, gầm, đảo lốp"
+        }
+      ],
+      "title" : "Mốc 10.000 KM (Bảo dưỡng Cấp 2)",
+      "freeLaborNote" : "Tiền công khoảng 250.000 - 300.000 đ",
+      "standardCostEstimate" : 1410000,
+      "levelName" : "Bảo dưỡng trung bình nhỏ",
+      "isFreeLabor" : false,
+      "km" : 10000,
+      "predatoryItems" : [
+        {
+          "cost" : 450000,
+          "name" : "Cân chỉnh góc đặt bánh xe điện tử 3D",
+          "id" : "FB22F5D1-2132-476E-A3D1-42F2D28FC97A",
+          "detail" : "Nếu xe anh chạy trên đường thẳng buông tay lái không bị nhao lái xỉa mép thì tuyệt đối không cần làm món này!"
+        },
+        {
+          "cost" : 380000,
+          "name" : "Vệ sinh họng hút bướm ga & cảm biến MAF",
+          "id" : "914CC588-8D7A-4316-BB5E-F07413F3C778",
+          "detail" : "10.000km bướm ga SkyActiv chưa dơ, tháo ra làm ẩu có thể gây lỗi vòng tua galanti."
+        },
+        {
+          "cost" : 850000,
+          "name" : "Combo phụ gia bảo dưỡng 3 chai",
+          "id" : "7B526F90-F3C6-49BA-8649-F78B436859AD",
+          "detail" : "Súc cacte + súc béc + tăng chỉ số octan xăng."
+        }
+      ],
+      "scriptToAdvisor" : "Em lên phiếu cho anh: thay nhớt, thay lọc nhớt, đảo lốp và vệ sinh lọc gió. Xe anh dùng xăng RON 95-III đã tự đổ phụ gia súc béc định kỳ, không làm góc đặt bánh xe và không lấy combo 3 chai phụ gia của hãng nhé.",
+      "predatoryCostEstimate" : 2890000
+    },
+    {
+      "id" : "E6937DAF-5DB7-4DEE-9380-5A5C904C53D7",
+      "requiredItems" : [
+        {
+          "cost" : 715000,
+          "name" : "Thay dầu động cơ + Lọc dầu chính hãng",
+          "id" : "8D2DCD05-5C02-4610-8130-440833CAD004",
+          "detail" : "Nhớt SkyActiv 0W-20 và lọc dầu mới"
+        },
+        {
+          "cost" : 450000,
+          "name" : "Thay mới Lọc gió động cơ & Lọc gió cabin (điều hòa)",
+          "id" : "02C07A71-01E5-4B19-AA27-8DBD9DBFBBCE",
+          "detail" : "Sau 20.000km bụi đường miền Tây nên thay mới cả 2 lọc để máy bốc và gió lạnh thơm"
+        },
+        {
+          "cost" : 200000,
+          "name" : "Đổ phụ gia làm sạch kim phun GDI đợt 2 (Chạy xăng RON 95-III)",
+          "id" : "E166413E-B04B-4875-8BD8-37141AA4A9C3",
+          "detail" : "Chu kỳ 1 vạn km tiếp theo: Đổ 1 chai súc béc để duy trì tia phun tơi xốp"
+        },
+        {
+          "cost" : 300000,
+          "name" : "Bảo dưỡng hệ thống phanh 4 bánh",
+          "id" : "CE9B263A-FE19-48A3-9804-04402D4E304D",
+          "detail" : "Tháo cùm phanh, vệ sinh bụi bố thắng, tra mỡ chịu nhiệt vào ắc phanh"
+        },
+        {
+          "cost" : 400000,
+          "name" : "Tiền công bảo dưỡng cấp 3",
+          "id" : "A8B14224-0FEE-4E31-893B-2BD55C736566",
+          "detail" : "Kiểm tra toàn diện hệ thống gầm điện lạnh"
+        }
+      ],
+      "title" : "Mốc 20.000 KM (Bảo dưỡng Cấp 3)",
+      "freeLaborNote" : "Chạm mốc 1 năm chạy xe của anh (20.000 km)",
+      "standardCostEstimate" : 2065000,
+      "levelName" : "Bảo dưỡng trung bình lớn (Hết 1 năm chạy)",
+      "isFreeLabor" : false,
+      "km" : 20000,
+      "predatoryItems" : [
+        {
+          "cost" : 450000,
+          "name" : "Thay nước làm mát động cơ sớm",
+          "id" : "E578A97F-34F5-4F43-B3BC-95C9A8614A73",
+          "detail" : "Nước làm mát zin Mazda FL22 là loại siêu bền tuổi thọ tới 100.000km hoặc 5 năm mới phải thay!"
+        },
+        {
+          "cost" : 600000,
+          "name" : "Vệ sinh buồng đốt bằng khí Hydro",
+          "id" : "CBBBA630-DB4E-4C28-9AFC-451BDDF4A32E",
+          "detail" : "Chiêu trò công nghệ làm sạch tốn tiền không có trong quy trình chính thức của Mazda Nhật Bản."
+        },
+        {
+          "cost" : 550000,
+          "name" : "Xúc rửa thùng xăng & cacte",
+          "id" : "5CBBD84C-ADE3-4D44-9931-EFA438245CD5",
+          "detail" : "Vẽ thêm để lấy doanh số phụ kiện."
+        }
+      ],
+      "scriptToAdvisor" : "Phiếu bảo dưỡng 20k km em làm cho anh: Thay nhớt, lọc nhớt, thay 2 lọc gió và bảo dưỡng phanh 4 bánh. Nước làm mát FL22 hãng bảo hành 100k km nên chưa thay, không làm súc rửa buồng đốt nhé.",
+      "predatoryCostEstimate" : 3465000
+    },
+    {
+      "id" : "67A91EC3-1BFB-4D12-9D85-961A8EF33A18",
+      "requiredItems" : [
+        {
+          "cost" : 715000,
+          "name" : "Thay dầu động cơ + Lọc dầu",
+          "id" : "7168DAE6-E319-4C1E-AEB6-4FEE6C29B342",
+          "detail" : "Combo cơ bản"
+        },
+        {
+          "cost" : 350000,
+          "name" : "Thay toàn bộ dầu phanh (Dầu thắng DOT 4)",
+          "id" : "6F8376CA-746F-4175-81DA-81D42FB3E593",
+          "detail" : "Sau 2 năm dầu phanh ngậm ẩm, bắt buộc xả thay mới toàn bộ để đảm bảo an toàn phanh đĩa"
+        },
+        {
+          "cost" : 650000,
+          "name" : "Thay lọc nhiên liệu (lọc xăng) trong bình",
+          "id" : "5E1CC55D-CEB0-4DDF-B7B1-6650EA25CB53",
+          "detail" : "Đặc biệt tối quan trọng khi chạy xăng RON 95-III (150 ppm lưu huỳnh), lọc sạch cặn bảo vệ bơm cao áp SkyActiv"
+        },
+        {
+          "cost" : 150000,
+          "name" : "Kiểm tra vệ sinh Bugi Iridium & Cảm biến Oxy (Xăng RON 95-III)",
+          "id" : "6271D28C-77BA-4081-B740-E56E29E4D407",
+          "detail" : "Xăng Euro 3 nhiều muội than, tháo kiểm tra soi đèn xịt vệ sinh sạch sẽ đầu cực bugi và cảm biến oxy"
+        },
+        {
+          "cost" : 150000,
+          "name" : "Đảo lốp & Cân bằng động 4 bánh",
+          "id" : "492D05EF-0D51-4E67-870C-03E11576DE0A",
+          "detail" : "Kiểm tra độ mòn gai lốp"
+        },
+        {
+          "cost" : 650000,
+          "name" : "Tiền công bảo dưỡng cấp 4",
+          "id" : "C99E433C-62E9-4233-8DF7-5B400E441285",
+          "detail" : "Công việc nhiều, cần tháo xả hệ thống phanh"
+        }
+      ],
+      "title" : "Mốc 40.000 KM (Bảo dưỡng LỚN - Cấp 4)",
+      "freeLaborNote" : "Sau 2 năm chạy xe (~40.000 km)",
+      "standardCostEstimate" : 2665000,
+      "levelName" : "Đại kỳ bảo dưỡng hệ thống an toàn",
+      "isFreeLabor" : false,
+      "km" : 40000,
+      "predatoryItems" : [
+        {
+          "cost" : 1800000,
+          "name" : "Thay dầu hộp số tự động 6AT sớm",
+          "id" : "20C852AB-37CC-4357-A031-3E37BFAF3838",
+          "detail" : "Hộp số 6AT của Mazda SkyActiv dùng dầu hộp số ATF-FZ tuổi thọ rất cao, khuyến cáo kiểm tra và thay ở 80.000 - 100.000km, 40.000km thay sớm là lãng phí!"
+        },
+        {
+          "cost" : 1200000,
+          "name" : "Thay bugi Iridium sớm",
+          "id" : "60483E78-13EB-4AB0-BDF7-ACEC6470B5B4",
+          "detail" : "Chạy xăng mức 3 chỉ cần vệ sinh muội than, nếu điện cực chưa mòn thì chưa phải thay (tuổi thọ Iridium vẫn đạt 60.000 - 80.000km)."
+        },
+        {
+          "cost" : 2500000,
+          "name" : "Xịt bảo dưỡng phủ cao su gầm \/ chống rỉ sét vẽ thêm",
+          "id" : "13380459-679C-481A-A34E-CDC2E665063E",
+          "detail" : "Gầm xe nhập Thái tôn dày đã có lớp nhúng sơn tĩnh điện tốt."
+        }
+      ],
+      "scriptToAdvisor" : "Mốc 40k km anh làm đúng theo sổ bảo hành: Thay nhớt, lọc nhớt, thay dầu phanh DOT 4, thay lọc xăng (do chạy xăng mức 3), vệ sinh bugi và cảm biến oxy. Dầu hộp số ATF-FZ để mốc 80k-100k km anh mới thay nhé.",
+      "predatoryCostEstimate" : 8015000
+    },
+    {
+      "id" : "674F090D-912C-4F1E-B8FA-532B8EEE7113",
+      "requiredItems" : [
+        {
+          "cost" : 550000,
+          "name" : "Thay dầu động cơ Mazda 0W-20 (~3.8 Lít)",
+          "id" : "1F1BBE2A-4294-493A-885F-BCA607B1356D",
+          "detail" : "Nhớt mới"
+        },
+        {
+          "cost" : 165000,
+          "name" : "Thay lọc dầu (lọc nhớt) chính hãng",
+          "id" : "6B718436-16D0-4999-BACC-D3AB9F1492A1",
+          "detail" : "Lọc dầu mới"
+        },
+        {
+          "cost" : 150000,
+          "name" : "Đảo lốp 4 bánh & kiểm tra má phanh",
+          "id" : "3A68BF3A-593D-4F0A-8513-49E71F4FEFEA",
+          "detail" : "Kiểm tra độ mòn má phanh sau 50.000km"
+        },
+        {
+          "cost" : 0,
+          "name" : "TIỀN CÔNG BẢO DƯỠNG: MIỄN PHÍ 100%",
+          "id" : "0A05D463-866A-42BA-B119-028E6327ECD9",
+          "detail" : "Áp dụng voucher khuyến mãi khi mua xe"
+        }
+      ],
+      "title" : "Mốc 50.000 KM (Được TẶNG MIỄN PHÍ CÔNG THACO)",
+      "freeLaborNote" : "⭐ ĐƯỢC MIỄN PHÍ 100% TIỀN CÔNG BẢO DƯỠNG THEO HỢP ĐỒNG BẠN VI TẶNG!",
+      "standardCostEstimate" : 865000,
+      "levelName" : "Bảo dưỡng Cấp 2 - Áp dụng quà tặng bạn Vi",
+      "isFreeLabor" : true,
+      "km" : 50000,
+      "predatoryItems" : [
+        {
+          "cost" : 350000,
+          "name" : "Tính tiền công dịch vụ (quên áp dụng voucher)",
+          "id" : "C0510C59-0808-48B2-9D19-539390551EA6",
+          "detail" : "Thường cố vấn dịch vụ sẽ lờ đi voucher tặng công của khách!"
+        },
+        {
+          "cost" : 1200000,
+          "name" : "Combo súc béc + phụ gia 4 chai",
+          "id" : "6E440FC9-0CD2-45BD-B19A-6949FD4C8DF8",
+          "detail" : "Chiêu trò quen thuộc khi khách được miễn phí tiền công."
+        }
+      ],
+      "scriptToAdvisor" : "Em ơi, mốc 50.000km này anh có quà tặng khuyến mãi của Thaco MIỄN PHÍ 100% TIỀN CÔNG, em nhập mã voucher vào hệ thống cho anh. Anh chỉ thanh toán tiền nhớt và lọc nhớt thôi, gạch bỏ các phụ gia giúp anh.",
+      "predatoryCostEstimate" : 2415000
+    },
+    {
+      "id" : "92E9A45B-D091-4C28-8623-034D6DCA6B31",
+      "requiredItems" : [
+        {
+          "cost" : 715000,
+          "name" : "Thay dầu động cơ Mazda 0W-20 + Lọc dầu",
+          "id" : "8628E4CB-B531-4C4D-9868-0C5A936355F1",
+          "detail" : "Combo thay nhớt và lọc nhớt bảo dưỡng định kỳ"
+        },
+        {
+          "cost" : 1100000,
+          "name" : "Thay bộ 4 Bugi Iridium đánh lửa chính hãng",
+          "id" : "04317083-EA7C-4951-8491-3FA502A8C0C8",
+          "detail" : "Do chạy xăng RON 95-III sau 60.000km điện cực đã hao mòn và bám muội than, thay mới giúp xe bốc và tiết kiệm nhiên liệu"
+        },
+        {
+          "cost" : 450000,
+          "name" : "Thay mới Lọc gió động cơ & Lọc gió cabin (điều hòa)",
+          "id" : "E518C012-9F1A-485A-AA17-D6E190B85075",
+          "detail" : "Thay định kỳ chu kỳ 20.000km tiếp theo"
+        },
+        {
+          "cost" : 200000,
+          "name" : "Đổ 1 chai dung dịch làm sạch kim phun GDI",
+          "id" : "F9F33E0F-E5EC-4960-A7CD-44949DE293B6",
+          "detail" : "Bảo dưỡng kim phun chu kỳ 1 vạn km"
+        },
+        {
+          "cost" : 350000,
+          "name" : "Đảo lốp 4 bánh & Bảo dưỡng cùm phanh 4 bánh",
+          "id" : "CB952960-A177-4480-B373-3A1DDF03DD71",
+          "detail" : "Vệ sinh má phanh, tra mỡ ắc trượt và đảo lốp"
+        },
+        {
+          "cost" : 400000,
+          "name" : "Tiền công bảo dưỡng cấp 3",
+          "id" : "1905DAD7-A342-4E85-989D-159C216240C2",
+          "detail" : "Công kiểm tra gầm, thay bugi, phanh và nhớt"
+        }
+      ],
+      "title" : "Mốc 60.000 KM (Bảo dưỡng Cấp 3 & Thay Bugi Iridium do dùng xăng RON 95-III)",
+      "freeLaborNote" : "Tiền công khoảng 350.000 - 450.000 đ",
+      "standardCostEstimate" : 3215000,
+      "levelName" : "Bảo dưỡng trung bình lớn (Năm thứ 3)",
+      "isFreeLabor" : false,
+      "km" : 60000,
+      "predatoryItems" : [
+        {
+          "cost" : 1800000,
+          "name" : "Thay dầu hộp số 6AT sớm ở 60k km",
+          "id" : "7A635F54-200C-4C67-B5D7-A9E45D427149",
+          "detail" : "Dầu ATF-FZ tuổi thọ 100.000km, chưa cần thay sớm."
+        },
+        {
+          "cost" : 1600000,
+          "name" : "Thay ắc quy khi đo điện áp vẫn khỏe",
+          "id" : "2EF7434E-1B74-4EAF-9836-0C7AEE56AE71",
+          "detail" : "Đo CCA và điện áp thực tế trước khi đồng ý thay."
+        },
+        {
+          "cost" : 450000,
+          "name" : "Combo súc rửa dàn lạnh bằng hóa chất",
+          "id" : "0ED4BE7D-C8A1-48D2-933A-168524761B74",
+          "detail" : "Chỉ cần thay lọc gió điều hòa 150k là xe hết mùi."
+        }
+      ],
+      "scriptToAdvisor" : "Mốc 60k km này anh thay nhớt, lọc nhớt, thay 4 bugi Iridium vì xe chạy xăng RON 95-III, thay 2 lọc gió và bảo dưỡng phanh. Không thay dầu hộp số và không làm phụ gia súc máy.",
+      "predatoryCostEstimate" : 7065000
+    },
+    {
+      "id" : "37A89CF2-AD3A-455F-8200-7AF29155BFCB",
+      "requiredItems" : [
+        {
+          "cost" : 165000,
+          "name" : "Thay dầu hộp số tự động SkyActiv-Drive ATF-FZ",
+          "id" : "1E6C164F-093C-4A88-99E3-558B792AD008",
+          "detail" : "Sau 100.000km dầu hộp số bắt buộc phải thay tuần hoàn để bảo vệ bộ lá côn và van thủy lực"
+        },
+        {
+          "cost" : 1100000,
+          "name" : "Thay bộ 4 Bugi Iridium đánh lửa chính hãng",
+          "id" : "A4199ACA-B42D-4DE3-8AC8-0ADA9A1269FB",
+          "detail" : "Đúng tuổi thọ thiết kế 100.000km của bugi Iridium Mazda"
+        },
+        {
+          "cost" : 480000,
+          "name" : "Thay nước làm mát động cơ Mazda Super Coolant FL22",
+          "id" : "180C2FAB-53AC-4C98-B7F3-706E28297527",
+          "detail" : "Thay mới toàn bộ sau 5 năm \/ 100.000km"
+        },
+        {
+          "cost" : 1150000,
+          "name" : "Thay dầu động cơ + Lọc dầu + 2 lọc gió",
+          "id" : "C25F7B1E-E229-4EC4-AD8C-A65FD4E16C29",
+          "detail" : "Combo làm mới động cơ"
+        },
+        {
+          "cost" : 0,
+          "name" : "TIỀN CÔNG BẢO DƯỠNG LỚN: MIỄN PHÍ 100%",
+          "id" : "A5D75527-E4A0-4FC4-B7AB-6CC42A02DE91",
+          "detail" : "Áp dụng voucher khuyến mãi lúc mua xe của bạn Vi"
+        }
+      ],
+      "title" : "Mốc 100.000 KM (Đại tu 5 năm - TẶNG MIỄN PHÍ CÔNG THACO)",
+      "freeLaborNote" : "⭐ ĐƯỢC MIỄN PHÍ 100% TIỀN CÔNG BẢO DƯỠNG THEO HỢP ĐỒNG BẠN VI TẶNG!",
+      "standardCostEstimate" : 4380000,
+      "levelName" : "Kỳ bảo dưỡng lớn nhất chu kỳ 5 năm",
+      "isFreeLabor" : true,
+      "km" : 100000,
+      "predatoryItems" : [
+        {
+          "cost" : 500000,
+          "name" : "Tính tiền công thay dầu hộp số và bugi (300k - 500k)",
+          "id" : "38C4627A-5C8B-4318-9938-70F495FD4706",
+          "detail" : "Hãy nhắc họ voucher bao trọn tiền công mốc 100k km!"
+        },
+        {
+          "cost" : 3500000,
+          "name" : "Vẽ thay cụm bơm xăng hoặc kim phun khi chưa hỏng",
+          "id" : "AFD272B6-FE44-4C1B-847F-87554A0B4E53",
+          "detail" : "Kiểm tra kỹ trước khi đồng ý thay thế phụ tùng đắt tiền."
+        }
+      ],
+      "scriptToAdvisor" : "Hôm nay mốc 100.000km anh áp dụng mã MIỄN PHÍ CÔNG BẢO DƯỠNG của bạn Vi tặng lúc mua xe. Thay cho anh dầu hộp số ATF-FZ, 4 bugi Iridium, nước mát FL22 và nhớt máy theo đúng sổ bảo hành nhé.",
+      "predatoryCostEstimate" : 8380000
+    }
+  ],
+  "profile" : {
+    "fuelType" : "Xăng RON 95 Mức 3 (Euro 3)",
+    "dailyKm" : 55,
+    "freeLaborMilestones" : [
+      1000,
+      50000,
+      100000
+    ],
+    "currentFuelPrice" : 25400,
+    "currentOdo" : 1200,
+    "purchaseDate" : "2026-10-17T02:31:04Z",
+    "engine" : "1.5L SkyActiv-G (110 hp, 144 Nm) + 6AT",
+    "plateNumber" : "66A - 344.06",
+    "warrantyKm" : 150000,
+    "insuranceCompany" : "Bảo hiểm Bảo Việt (Có thủy kích + xưởng Thaco)",
+    "warrantyYears" : 5,
+    "origin" : "Nhập khẩu nguyên chiếc Thái Lan",
+    "carName" : "Mazda 2 Sedan 1.5L AT",
+    "insuranceExpiry" : "2027-10-17T02:31:04Z"
+  },
+  "accessories" : [
+    {
+      "category" : "Mua ngay khi nhận xe",
+      "isPurchased" : false,
+      "id" : "1D2F81C7-1A44-48FB-8DC5-2D1285F92219",
+      "priority" : "Tối quan trọng",
+      "name" : "Gương điện tử 70mai S500 (Cam trước 3K + Cam lùi)",
+      "recommendedModel" : "70mai Dash Cam Wide S500 cảm biến Sony Starvis 2",
+      "reason" : "Mazda 2 AT tiêu chuẩn chưa có màn hình & cam lùi. Gương S500 kẹp lên gương hậu zin, ghi hình trước sau, góc nhìn sau rộng gấp 3 lần gương thường, chống lóa đèn pha sau cực tốt khi đi đêm miền Tây.",
+      "estimatedPrice" : "3.200.000 - 3.500.000 đ"
+    },
+    {
+      "category" : "Mua ngay khi nhận xe",
+      "isPurchased" : true,
+      "id" : "7A995368-E3BA-4A9F-8A2F-A793DD18B308",
+      "priority" : "Cao",
+      "name" : "Màn hình hiển thị tốc độ HUD H50 kính lái (OBD2)",
+      "recommendedModel" : "HUD H50 hoặc HUD A8 cắm jack zin OBD2",
+      "reason" : "Cắm trực tiếp cổng OBD2 dưới chân tài xế, hắt tốc độ và cảnh báo quá tốc độ lên kính lái. Không cần cúi nhìn đồng hồ cơ, tránh bị bắn tốc độ trên quốc lộ 80 \/ 30.",
+      "estimatedPrice" : "1.100.000 - 1.300.000 đ"
+    },
+    {
+      "category" : "Mua ngay khi nhận xe",
+      "isPurchased" : true,
+      "id" : "FA2E407E-F5BF-42F3-92ED-46CAC07C1154",
+      "priority" : "Cao",
+      "name" : "Bơm lốp mini kiêm Kích bình ắc quy dự phòng",
+      "recommendedModel" : "70mai Jump Starter hoặc Xiaomi 1S Portable Air Pump",
+      "reason" : "Đi làm 55km\/ngày qua các đoạn vắng lúc chập tối. Có bơm điện tử và kích bình dự phòng sẽ tự xử lý ngay trong 5 phút mà không cần đợi cứu hộ.",
+      "estimatedPrice" : "1.400.000 - 1.700.000 đ"
+    },
+    {
+      "category" : "Mua ngay khi nhận xe",
+      "isPurchased" : false,
+      "id" : "9E285962-C078-41D8-895B-2A659B71B204",
+      "priority" : "Cao",
+      "name" : "Khay nhựa lót cốp khoang hành lý TPV chống nước",
+      "recommendedModel" : "Khay cốp đúc TPV \/ cao su chuyên dụng phom Mazda 2 Sedan",
+      "reason" : "Cốp sau Mazda 2 là nỉ nguyên bản. Miền Tây hay chở trái cây, hải sản, đồ ướt. Khay nhựa đúc viền cao 5cm ngăn nước tràn ra sàn nỉ, chống ẩm mốc hôi xe.",
+      "estimatedPrice" : "450.000 - 650.000 đ"
+    },
+    {
+      "category" : "Mua ngay khi nhận xe",
+      "isPurchased" : false,
+      "id" : "242D167D-20F5-4CD5-B3DC-2366D713FD56",
+      "priority" : "Tối quan trọng",
+      "name" : "Dán phim cách nhiệt Llumar \/ Nano Ceramic",
+      "recommendedModel" : "LLumar chính hãng Thaco hoặc 3M Ceramic IR",
+      "reason" : "Chống nắng gắt miền Tây, bảo vệ da và nội thất taplo, tăng hiệu quả làm mát điều hòa. Kính lái dán Ceramic sáng (VLT 65-70%) để bắt sóng VETC.",
+      "estimatedPrice" : "Được tặng hoặc bù 1.5tr"
+    },
+    {
+      "category" : "Mua sau 1-3 tháng",
+      "isPurchased" : false,
+      "id" : "5BE7D2CC-7006-4E59-B6BE-2C58280B8565",
+      "priority" : "Trung bình",
+      "name" : "Bọc da vô lăng cao cấp khâu tay thủ công",
+      "recommendedModel" : "Da Nappa hoặc da bò tự nhiên đục lỗ khâu chỉ đỏ Kodo",
+      "reason" : "Vô lăng bản AT tiêu chuẩn là urethane trơn. Bọc da khâu tay giúp cầm đầm tay, êm ái, thấm hút mồ hôi và tăng tính thẩm mỹ thể thao.",
+      "estimatedPrice" : "500.000 - 800.000 đ"
+    },
+    {
+      "category" : "Mua sau 1-3 tháng",
+      "isPurchased" : false,
+      "id" : "26B2CD41-144D-4F37-B359-9A34E9A771CE",
+      "priority" : "Trung bình",
+      "name" : "Thảm lót sàn đúc khuôn TPE nguyên sinh tràn viền",
+      "recommendedModel" : "Thảm khuôn TPE KATA hoặc Macsim theo chuẩn sàn Mazda 2",
+      "reason" : "Thay thế thảm nỉ tặng theo xe. Thảm TPE nguyên sinh không mùi hôi dù để xe phơi nắng, tháo ra xịt nước 2 phút là khô cong.",
+      "estimatedPrice" : "1.200.000 - 1.600.000 đ"
+    },
+    {
+      "category" : "Mua sau 1-3 tháng",
+      "isPurchased" : false,
+      "id" : "BA130938-B225-49E4-AA21-D1207100D8A0",
+      "priority" : "Tùy chọn phong cách",
+      "name" : "Dán nóc đen Panorama (Decal đen bóng 3 lớp)",
+      "recommendedModel" : "Decal TeckWrap hoặc Avery Dennison siêu bóng",
+      "reason" : "Dành cho xe màu Trắng ngọc trai. Biến nóc xe thành mui kính thể thao sang trọng, đồng thời tạo cầu nối phong thủy Kim sinh Thủy sinh Mộc (Mậu Thìn 1988).",
+      "estimatedPrice" : "1.000.000 - 1.500.000 đ"
+    },
+    {
+      "category" : "Danh sách ĐEN (Không mua)",
+      "isPurchased" : false,
+      "id" : "8F825B4D-BD07-4883-8B22-C6113416F49A",
+      "priority" : "Khuyên bỏ 100%",
+      "name" : "Bọc trần nilon (bọc nilon trần xe)",
+      "recommendedModel" : "Giữ nguyên trần nỉ nguyên bản của xe",
+      "reason" : "Rất xấu, gây bí bách không thoát nhiệt, cộng hưởng âm thanh làm tiếng ồn rào rào dội ngược vào tai, lâu ngày giữ ẩm mốc làm ố vàng lớp nỉ trần zin.",
+      "estimatedPrice" : "Lãng phí ~600.000 đ"
+    },
+    {
+      "category" : "Danh sách ĐEN (Không mua)",
+      "isPurchased" : false,
+      "id" : "78A39366-8FB4-402D-B8D7-7CAA433D51B3",
+      "priority" : "Khuyên bỏ 100%",
+      "name" : "Gói phủ bóng Ceramic đắt đỏ (8 - 12 triệu)",
+      "recommendedModel" : "Chỉ cần rửa xe sạch và xịt dung dịch bảo dưỡng sơn nhanh (Quick Detailer) 150k",
+      "reason" : "Xe phổ thông đi đường tỉnh rửa xe bình thường là bền nhất. Lớp ceramic sau 6 tháng phải đi bảo dưỡng tốn kém, không chống được đá dăm bắn trên quốc lộ.",
+      "estimatedPrice" : "Lãng phí 8.000.000 - 12.000.000 đ"
+    },
+    {
+      "category" : "Danh sách ĐEN (Không mua)",
+      "isPurchased" : false,
+      "id" : "7A143060-3155-41DD-BA7D-359A5ACE5ECE",
+      "priority" : "Khuyên bỏ 100%",
+      "name" : "Ốp viền đèn, ốp chén cửa inox\/crom sáng bóng",
+      "recommendedModel" : "Để nguyên bản thiết kế KODO tối giản sang trọng của Mazda",
+      "reason" : "Dán bằng keo 3M lâu ngày đọng cát bụi và nước mưa bên trong, làm ố vàng và rỉ sét mép sơn gốc của xe.",
+      "estimatedPrice" : "Lãng phí ~800.000 đ"
+    },
+    {
+      "category" : "Danh sách ĐEN (Không mua)",
+      "isPurchased" : false,
+      "id" : "BD5E8099-010F-4E5C-89E3-F1CDDA4F1A44",
+      "priority" : "Khuyên bỏ 100%",
+      "name" : "Nước hoa xe hơi \/ Sáp thơm hóa chất nồng nặc",
+      "recommendedModel" : "Túi than hoạt tính hút ẩm hoặc lá dứa tự nhiên",
+      "reason" : "Hóa chất bốc hơi bám vào giàn lạnh gây màng nhầy, nghẹt điều hòa và sinh nấm mốc hôi rình. Xe mới chỉ cần dùng túi than hoạt tính hút mùi.",
+      "estimatedPrice" : "Lãng phí 200k - 500k"
+    }
+  ]
+}
