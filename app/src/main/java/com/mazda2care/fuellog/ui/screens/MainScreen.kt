@@ -792,7 +792,7 @@ private fun FuelRecordItemCard(
                         fontSize = 14.sp
                     )
                     Text(
-                        text = record.stationName,
+                        text = "Hãng xăng: ${CarProfile.normalizeBrandName(record.stationName)}",
                         fontSize = 12.sp,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
@@ -948,9 +948,11 @@ private fun SmartAddFuelBottomSheet(
     }
     var stationText by remember {
         mutableStateOf(
-            editingRecord?.stationName
-                ?: profile.favoriteStations.firstOrNull()
-                ?: "Petrolimex CHXD 101 Cao Lãnh"
+            if (editingRecord != null) {
+                CarProfile.normalizeBrandName(editingRecord.stationName)
+            } else {
+                profile.favoriteStations.firstOrNull() ?: "Petrolimex"
+            }
         )
     }
     var isFullTank by remember {
@@ -1238,36 +1240,29 @@ private fun SmartAddFuelBottomSheet(
                 )
             }
 
+            // 5. Chọn nhanh Top 5 Hãng Xăng phổ biến nhất
             Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                OutlinedTextField(
-                    value = stationText,
-                    onValueChange = { stationText = it },
-                    label = { Text("Cây xăng") },
-                    singleLine = true,
-                    modifier = Modifier.fillMaxWidth()
+                Text(
+                    text = "Hãng xăng (Chạm chọn nhanh):",
+                    fontSize = 13.sp,
+                    fontWeight = FontWeight.SemiBold
                 )
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .horizontalScroll(rememberScrollState()),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                FlowRow(
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    verticalArrangement = Arrangement.spacedBy(6.dp)
                 ) {
-                    profile.favoriteStations.forEach { st ->
-                        AssistChip(
-                            onClick = { stationText = st },
+                    CarProfile.TOP_5_FUEL_BRANDS.forEach { brand ->
+                        val isSelected = stationText.equals(brand, ignoreCase = true)
+                        FilterChip(
+                            selected = isSelected,
+                            onClick = { stationText = brand },
                             label = {
                                 Text(
-                                    text = st.replace("Petrolimex ", ""),
-                                    fontSize = 12.sp
+                                    text = brand,
+                                    fontSize = 12.sp,
+                                    fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium
                                 )
-                            },
-                            colors = AssistChipDefaults.assistChipColors(
-                                containerColor = if (stationText == st) {
-                                    FuelOrange.copy(alpha = 0.14f)
-                                } else {
-                                    Color.Transparent
-                                }
-                            )
+                            }
                         )
                     }
                 }
@@ -1762,18 +1757,14 @@ private fun CarAndBackupTabContent(
                     )
                 }
 
-                OutlinedTextField(
-                    value = stationsText,
-                    onValueChange = { stationsText = it },
-                    label = { Text("Danh sách cây xăng chọn nhanh (mỗi dòng 1 cây xăng)") },
-                    minLines = 3,
-                    maxLines = 6,
-                    modifier = Modifier.fillMaxWidth()
+                Text(
+                    text = "Hãng xăng hỗ trợ: ${CarProfile.TOP_5_FUEL_BRANDS.joinToString(", ")}",
+                    fontSize = 12.sp,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
 
                 Button(
                     onClick = {
-                        val stations = stationsText.lines().map { it.trim() }.filter { it.isNotEmpty() }
                         onSaveProfile(
                             profile.copy(
                                 carName = carName.ifBlank { profile.carName },
@@ -1781,7 +1772,7 @@ private fun CarAndBackupTabContent(
                                 tankCapacityLiters = tankCap.toDoubleOrNull() ?: 38.0,
                                 currentOdo = currentOdo.toIntOrNull() ?: profile.currentOdo,
                                 dailyKm = dailyKm.toIntOrNull() ?: profile.dailyKm,
-                                favoriteStations = if (stations.isEmpty()) profile.favoriteStations else stations
+                                favoriteStations = CarProfile.TOP_5_FUEL_BRANDS
                             )
                         )
                         savedBanner = true

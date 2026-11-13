@@ -708,7 +708,7 @@ private fun StationBreakdownCard(
                     modifier = Modifier.size(18.dp)
                 )
                 Text(
-                    text = "THỐNG KÊ CHI TIÊU THEO CÂY XĂNG",
+                    text = "THỐNG KÊ CHI TIÊU THEO HÃNG XĂNG",
                     fontWeight = FontWeight.Black,
                     fontSize = 14.sp
                 )
@@ -844,7 +844,7 @@ private fun buildStationSummaries(
     totalAllCost: Double
 ): List<StationExpenseSummary> {
     if (records.isEmpty() || totalAllCost <= 0) return emptyList()
-    return records.groupBy { it.stationName.ifBlank { "Cây xăng khác" } }
+    return records.groupBy { CarProfile.normalizeBrandName(it.stationName) }
         .map { (station, list) ->
             val cost = list.sumOf { it.totalCost }
             val liters = list.sumOf { it.liters }

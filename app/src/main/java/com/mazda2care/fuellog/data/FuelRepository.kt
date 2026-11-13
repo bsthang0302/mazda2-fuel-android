@@ -39,10 +39,8 @@ class FuelRepository(private val context: Context, private val dao: FuelDao) {
     }
 
     fun getCarProfile(): CarProfile {
-        val stationsRaw = prefs.getString(
-            "favorite_stations",
-            "Petrolimex CHXD 101 Cao Lãnh|Petrolimex CHXD 102 Cao Lãnh|Petrolimex CHXD 111 Cao Lãnh|Cây xăng khác"
-        ) ?: ""
+        val defaultBrandsStr = CarProfile.TOP_5_FUEL_BRANDS.joinToString("|")
+        val stationsRaw = prefs.getString("favorite_brands_v1", defaultBrandsStr) ?: defaultBrandsStr
         val stations = stationsRaw.split("|").map { it.trim() }.filter { it.isNotEmpty() }
 
         return CarProfile(
@@ -58,7 +56,7 @@ class FuelRepository(private val context: Context, private val dao: FuelDao) {
             currentFuelPrice = prefs.getFloat("current_fuel_price", 25400f).toDouble(),
             currentOdo = prefs.getInt("current_odo", 1200),
             dailyKm = prefs.getInt("daily_km", 55),
-            favoriteStations = if (stations.isEmpty()) listOf("Petrolimex CHXD 101 Cao Lãnh", "Cây xăng khác") else stations
+            favoriteStations = if (stations.isEmpty()) CarProfile.TOP_5_FUEL_BRANDS else stations
         )
     }
 
@@ -76,7 +74,7 @@ class FuelRepository(private val context: Context, private val dao: FuelDao) {
             .putFloat("current_fuel_price", profile.currentFuelPrice.toFloat())
             .putInt("current_odo", profile.currentOdo)
             .putInt("daily_km", profile.dailyKm)
-            .putString("favorite_stations", profile.favoriteStations.joinToString("|"))
+            .putString("favorite_brands_v1", profile.favoriteStations.joinToString("|"))
             .apply()
     }
 
@@ -178,7 +176,7 @@ class FuelRepository(private val context: Context, private val dao: FuelDao) {
             odo = odo,
             liters = liters,
             totalCost = totalCost,
-            stationName = stationName.ifBlank { "Petrolimex CHXD 101 Cao Lãnh" },
+            stationName = stationName.ifBlank { "Petrolimex" },
             pricePerLiter = pricePerLiter,
             isFullTank = isFullTank
         )
@@ -382,7 +380,7 @@ class FuelRepository(private val context: Context, private val dao: FuelDao) {
                         odo = obj.optInt("odo", 0),
                         liters = obj.optDouble("liters", 0.0),
                         totalCost = obj.optDouble("totalCost", 0.0),
-                        stationName = obj.optString("stationName", "Cây xăng khác"),
+                        stationName = CarProfile.normalizeBrandName(obj.optString("stationName", "Petrolimex")),
                         pricePerLiter = obj.optDouble("pricePerLiter", 25400.0),
                         tripKm = if (obj.has("tripKm")) obj.optInt("tripKm") else null,
                         fuelEfficiency = eff

@@ -121,13 +121,30 @@ data class CarProfile(
     val currentFuelPrice: Double = 25400.0,
     val currentOdo: Int = 1200,
     val dailyKm: Int = 55,
-    val favoriteStations: List<String> = listOf(
-        "Petrolimex CHXD 101 Cao Lãnh",
-        "Petrolimex CHXD 102 Cao Lãnh",
-        "Petrolimex CHXD 111 Cao Lãnh",
-        "Cây xăng khác"
-    )
+    val favoriteStations: List<String> = TOP_5_FUEL_BRANDS
 ) {
+    companion object {
+        val TOP_5_FUEL_BRANDS = listOf(
+            "Petrolimex",
+            "Petimex",
+            "PVOIL",
+            "Saigon Petro",
+            "Mipec / Khác"
+        )
+
+        fun normalizeBrandName(raw: String): String {
+            val lower = raw.lowercase(Locale.ROOT)
+            return when {
+                lower.contains("petrolimex") || lower.contains("chxd") -> "Petrolimex"
+                lower.contains("petimex") || lower.contains("đồng tháp") -> "Petimex"
+                lower.contains("pvoil") || lower.contains("pv oil") -> "PVOIL"
+                lower.contains("saigon") || lower.contains("sài gòn") -> "Saigon Petro"
+                lower.contains("mipec") || lower.contains("comeco") || lower.contains("khác") -> "Mipec / Khác"
+                raw.isBlank() -> "Petrolimex"
+                else -> raw.trim()
+            }
+        }
+    }
     val selectedFuelProduct: FuelProduct
         get() = FuelProduct.fromCode(selectedFuelCode)
 
