@@ -30,6 +30,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Analytics
 import androidx.compose.material.icons.filled.Bolt
+import androidx.compose.material.icons.filled.Build
 import androidx.compose.material.icons.filled.CalendarMonth
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.DeleteOutline
@@ -205,25 +206,31 @@ fun MainScreen(
                     selected = selectedTab == 0,
                     onClick = { selectedTab = 0 },
                     icon = { Icon(Icons.Default.LocalGasStation, contentDescription = null) },
-                    label = { Text("Nhật ký") }
+                    label = { Text("Nhật ký", fontSize = 10.sp) }
                 )
                 NavigationBarItem(
                     selected = selectedTab == 1,
                     onClick = { selectedTab = 1 },
                     icon = { Icon(Icons.Default.Analytics, contentDescription = null) },
-                    label = { Text("Thống kê") }
+                    label = { Text("Thống kê", fontSize = 10.sp) }
                 )
                 NavigationBarItem(
                     selected = selectedTab == 2,
                     onClick = { selectedTab = 2 },
-                    icon = { Icon(Icons.Default.PriceChange, contentDescription = null) },
-                    label = { Text("Giá xăng") }
+                    icon = { Icon(Icons.Default.Build, contentDescription = null) },
+                    label = { Text("Bảo dưỡng", fontSize = 10.sp) }
                 )
                 NavigationBarItem(
                     selected = selectedTab == 3,
                     onClick = { selectedTab = 3 },
+                    icon = { Icon(Icons.Default.PriceChange, contentDescription = null) },
+                    label = { Text("Giá xăng", fontSize = 10.sp) }
+                )
+                NavigationBarItem(
+                    selected = selectedTab == 4,
+                    onClick = { selectedTab = 4 },
                     icon = { Icon(Icons.Default.DirectionsCar, contentDescription = null) },
-                    label = { Text("Xe & Sao lưu") }
+                    label = { Text("Xe & Sao lưu", fontSize = 10.sp) }
                 )
             }
         }
@@ -246,6 +253,7 @@ fun MainScreen(
                         viewModel.selectFuelProductAndZone(profile.selectedFuelProduct, newZone)
                     },
                     onOpenAnalyticsTab = { selectedTab = 1 },
+                    onOpenMaintenanceTab = { selectedTab = 2 },
                     onAddClick = {
                         editingRecord = null
                         showAddRefillSheet = true
@@ -264,7 +272,12 @@ fun MainScreen(
                     records = records
                 )
 
-                2 -> PriceAndAnalyticsTabContent(
+                2 -> MaintenanceGuideTabContent(
+                    profile = profile,
+                    onUpdateProfile = { updated -> viewModel.updateCarProfile(updated) }
+                )
+
+                3 -> PriceAndAnalyticsTabContent(
                     profile = profile,
                     liveItems = liveItems,
                     periods = periods,
@@ -278,7 +291,7 @@ fun MainScreen(
                     onOpenManualPrice = { showManualPriceDialog = true }
                 )
 
-                3 -> CarAndBackupTabContent(
+                4 -> CarAndBackupTabContent(
                     profile = profile,
                     recordsCount = records.size,
                     onSaveProfile = { updated -> viewModel.updateCarProfile(updated) },
@@ -339,6 +352,7 @@ private fun FuelLogTabContent(
     onOpenManualPrice: () -> Unit,
     onSwitchZone: (PriceZone) -> Unit,
     onOpenAnalyticsTab: () -> Unit,
+    onOpenMaintenanceTab: () -> Unit,
     onAddClick: () -> Unit,
     onEditRecord: (FuelRecordEntity) -> Unit,
     onDeleteRecord: (FuelRecordEntity) -> Unit
@@ -408,6 +422,14 @@ private fun FuelLogTabContent(
                 onRefreshPrice = onRefreshPrice,
                 onOpenManualPrice = onOpenManualPrice,
                 onSwitchZone = onSwitchZone
+            )
+        }
+
+        // Thẻ nhắc lịch bảo dưỡng định kỳ mỗi +5.000 km ngay trên trang chủ
+        item {
+            HomeMaintenanceReminderBanner(
+                profile = profile,
+                onOpenMaintenanceTab = onOpenMaintenanceTab
             )
         }
 

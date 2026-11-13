@@ -56,6 +56,8 @@ class FuelRepository(private val context: Context, private val dao: FuelDao) {
             currentFuelPrice = prefs.getFloat("current_fuel_price", 25400f).toDouble(),
             currentOdo = prefs.getInt("current_odo", 1200),
             dailyKm = prefs.getInt("daily_km", 55),
+            lastMaintenanceOdo = prefs.getInt("last_maintenance_odo", 1000),
+            maintenanceIntervalKm = prefs.getInt("maintenance_interval_km", 5000),
             favoriteStations = if (stations.isEmpty()) CarProfile.TOP_5_FUEL_BRANDS else stations
         )
     }
@@ -74,6 +76,8 @@ class FuelRepository(private val context: Context, private val dao: FuelDao) {
             .putFloat("current_fuel_price", profile.currentFuelPrice.toFloat())
             .putInt("current_odo", profile.currentOdo)
             .putInt("daily_km", profile.dailyKm)
+            .putInt("last_maintenance_odo", profile.lastMaintenanceOdo)
+            .putInt("maintenance_interval_km", profile.maintenanceIntervalKm)
             .putString("favorite_brands_v1", profile.favoriteStations.joinToString("|"))
             .apply()
     }

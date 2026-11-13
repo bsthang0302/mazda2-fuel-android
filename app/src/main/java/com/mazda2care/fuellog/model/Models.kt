@@ -121,8 +121,18 @@ data class CarProfile(
     val currentFuelPrice: Double = 25400.0,
     val currentOdo: Int = 1200,
     val dailyKm: Int = 55,
+    val lastMaintenanceOdo: Int = 1000,
+    val maintenanceIntervalKm: Int = 5000,
     val favoriteStations: List<String> = TOP_5_FUEL_BRANDS
 ) {
+    val nextMaintenanceOdo: Int
+        get() = lastMaintenanceOdo + maintenanceIntervalKm
+
+    val kmUntilNextMaintenance: Int
+        get() = (nextMaintenanceOdo - currentOdo).coerceAtLeast(0)
+
+    val isMaintenanceDueSoon: Boolean
+        get() = kmUntilNextMaintenance <= 500
     companion object {
         val TOP_5_FUEL_BRANDS = listOf(
             "Petrolimex",
