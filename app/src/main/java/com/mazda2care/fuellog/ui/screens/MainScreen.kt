@@ -38,6 +38,7 @@ import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.FileDownload
 import androidx.compose.material.icons.filled.FileUpload
 import androidx.compose.material.icons.filled.LocalGasStation
+import androidx.compose.material.icons.filled.PriceChange
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.AssistChip
@@ -103,12 +104,23 @@ import com.mazda2care.fuellog.ui.theme.CostPurple
 import com.mazda2care.fuellog.ui.theme.EcoGreen
 import com.mazda2care.fuellog.ui.theme.FuelOrange
 import com.mazda2care.fuellog.ui.theme.PetrolBlue
+import java.time.DayOfWeek
 import java.time.Instant
+import java.time.LocalDate
 import java.time.LocalDateTime
+import java.time.YearMonth
 import java.time.ZoneId
 import java.time.ZoneOffset
+import java.time.temporal.TemporalAdjusters
 import java.util.Locale
 import kotlin.math.roundToInt
+
+private enum class HomeQuickScope(val label: String) {
+    WEEK("Tuần này"),
+    MONTH("Tháng này"),
+    YEAR("Năm nay"),
+    ALL("Tổng cộng")
+}
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -193,17 +205,23 @@ fun MainScreen(
                     selected = selectedTab == 0,
                     onClick = { selectedTab = 0 },
                     icon = { Icon(Icons.Default.LocalGasStation, contentDescription = null) },
-                    label = { Text("Nhật ký xăng") }
+                    label = { Text("Nhật ký") }
                 )
                 NavigationBarItem(
                     selected = selectedTab == 1,
                     onClick = { selectedTab = 1 },
                     icon = { Icon(Icons.Default.Analytics, contentDescription = null) },
-                    label = { Text("Giá & Biểu đồ") }
+                    label = { Text("Thống kê") }
                 )
                 NavigationBarItem(
                     selected = selectedTab == 2,
                     onClick = { selectedTab = 2 },
+                    icon = { Icon(Icons.Default.PriceChange, contentDescription = null) },
+                    label = { Text("Giá xăng") }
+                )
+                NavigationBarItem(
+                    selected = selectedTab == 3,
+                    onClick = { selectedTab = 3 },
                     icon = { Icon(Icons.Default.DirectionsCar, contentDescription = null) },
                     label = { Text("Xe & Sao lưu") }
                 )
@@ -227,6 +245,7 @@ fun MainScreen(
                     onSwitchZone = { newZone ->
                         viewModel.selectFuelProductAndZone(profile.selectedFuelProduct, newZone)
                     },
+                    onOpenAnalyticsTab = { selectedTab = 1 },
                     onAddClick = {
                         editingRecord = null
                         showAddRefillSheet = true
@@ -240,7 +259,12 @@ fun MainScreen(
                     }
                 )
 
-                1 -> PriceAndAnalyticsTabContent(
+                1 -> ExpenseAnalyticsTabContent(
+                    profile = profile,
+                    records = records
+                )
+
+                2 -> PriceAndAnalyticsTabContent(
                     profile = profile,
                     liveItems = liveItems,
                     periods = periods,
@@ -254,7 +278,7 @@ fun MainScreen(
                     onOpenManualPrice = { showManualPriceDialog = true }
                 )
 
-                2 -> CarAndBackupTabContent(
+                3 -> CarAndBackupTabContent(
                     profile = profile,
                     recordsCount = records.size,
                     onSaveProfile = { updated -> viewModel.updateCarProfile(updated) },
@@ -314,19 +338,36 @@ private fun FuelLogTabContent(
     onRefreshPrice: () -> Unit,
     onOpenManualPrice: () -> Unit,
     onSwitchZone: (PriceZone) -> Unit,
+    onOpenAnalyticsTab: () -> Unit,
     onAddClick: () -> Unit,
     onEditRecord: (FuelRecordEntity) -> Unit,
     onDeleteRecord: (FuelRecordEntity) -> Unit
 ) {
-    val nowZone = Instant.now().atZone(ZoneId.systemDefault())
-    val thisMonthRecords = records.filter {
-        val dt = Instant.ofEpochMilli(it.epochMillis).atZone(ZoneId.systemDefault())
-        dt.month == nowZone.month && dt.year == nowZone.year
+    var quickScope by remember { mutableStateOf(HomeQuickScope.MONTH) }
+    val zoneId = remember { ZoneId.systemDefault() }
+    val today = remember { LocalDate.now(zoneId) }
+    val startOfWeek = remember(today) { today.with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY)) }
+    val currentYm = remember(today) { YearMonth.from(today) }
+
+    val scopedRecords = remember(records, quickScope, startOfWeek, currentYm, today) {
+        when (quickScope) {
+            HomeQuickScope.WEEK -> records.filter {
+                !Instant.ofEpochMilli(it.epochMillis).atZone(zoneId).toLocalDate().isBefore(startOfWeek)
+            }
+            HomeQuickScope.MONTH -> records.filter {
+                YearMonth.from(Instant.ofEpochMilli(it.epochMillis).atZone(zoneId).toLocalDate()) == currentYm
+            }
+            HomeQuickScope.YEAR -> records.filter {
+                Instant.ofEpochMilli(it.epochMillis).atZone(zoneId).toLocalDate().year == today.year
+            }
+            HomeQuickScope.ALL -> records
+        }
     }
-    val thisMonthCost = thisMonthRecords.sumOf { it.totalCost }
-    val thisMonthLiters = thisMonthRecords.sumOf { it.liters }
-    val totalCost = records.sumOf { it.totalCost }
-    val totalLiters = records.sumOf { it.liters }
+
+    val scopedCost = scopedRecords.sumOf { it.totalCost }
+    val scopedLiters = scopedRecords.sumOf { it.liters }
+    val totalAllTimeCost = records.sumOf { it.totalCost }
+    val totalAllTimeLiters = records.sumOf { it.liters }
 
     val sortedByOdo = records.sortedWith(compareBy<FuelRecordEntity> { it.odo }.thenBy { it.epochMillis })
     val totalDistance = if (sortedByOdo.size >= 2) {
@@ -370,25 +411,60 @@ private fun FuelLogTabContent(
             )
         }
 
+        // Thanh lọc nhanh Tuần này | Tháng này | Năm nay | Tổng cộng
         item {
-            Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                        HomeQuickScope.entries.forEach { scope ->
+                            val selected = quickScope == scope
+                            Surface(
+                                modifier = Modifier
+                                    .clip(RoundedCornerShape(8.dp))
+                                    .clickable { quickScope = scope },
+                                color = if (selected) FuelOrange else MaterialTheme.colorScheme.surface
+                            ) {
+                                Text(
+                                    text = scope.label,
+                                    fontSize = 11.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    color = if (selected) Color.White else MaterialTheme.colorScheme.onSurfaceVariant,
+                                    modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp)
+                                )
+                            }
+                        }
+                    }
+
+                    Text(
+                        text = "Chi tiết →",
+                        fontSize = 12.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = PetrolBlue,
+                        modifier = Modifier.clickable { onOpenAnalyticsTab() }
+                    )
+                }
+
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.spacedBy(10.dp)
                 ) {
                     KpiStatCard(
                         modifier = Modifier.weight(1f),
-                        title = "THÁNG NÀY",
-                        value = FormatUtils.formatVnd(thisMonthCost),
-                        subtitle = "${thisMonthRecords.size} lần • ${String.format(Locale.US, "%.1f", thisMonthLiters)} Lít",
+                        title = "CHI TIÊU (${quickScope.label.uppercase()})",
+                        value = FormatUtils.formatVnd(scopedCost),
+                        subtitle = "${scopedRecords.size} lần • ${String.format(Locale.US, "%.1f", scopedLiters)} Lít",
                         accentColor = FuelOrange
                     )
                     KpiStatCard(
                         modifier = Modifier.weight(1f),
-                        title = "MỨC TIÊU THỤ",
-                        value = FormatUtils.formatL100Km(avgL100Km),
-                        subtitle = if (totalDistance > 50) "Qua $totalDistance km ODO" else "Chuẩn SkyActiv 1.5L",
-                        accentColor = EcoGreen
+                        title = "TỔNG TIỀN TÍCH LŨY",
+                        value = FormatUtils.formatVnd(totalAllTimeCost),
+                        subtitle = "${records.size} lần • ${String.format(Locale.US, "%.1f", totalAllTimeLiters)} Lít",
+                        accentColor = PetrolBlue
                     )
                 }
                 Row(
@@ -397,17 +473,17 @@ private fun FuelLogTabContent(
                 ) {
                     KpiStatCard(
                         modifier = Modifier.weight(1f),
+                        title = "MỨC TIÊU THỤ",
+                        value = FormatUtils.formatL100Km(avgL100Km),
+                        subtitle = if (totalDistance > 50) "Qua $totalDistance km ODO" else "Chuẩn SkyActiv 1.5L",
+                        accentColor = EcoGreen
+                    )
+                    KpiStatCard(
+                        modifier = Modifier.weight(1f),
                         title = "CHI PHÍ / KM",
                         value = "${FormatUtils.formatVndNumberOnly(avgCostPerKm)} đ/km",
                         subtitle = "~${FormatUtils.formatVnd(avgCostPerKm * profile.dailyKm)} / ngày (${profile.dailyKm}km)",
                         accentColor = CostPurple
-                    )
-                    KpiStatCard(
-                        modifier = Modifier.weight(1f),
-                        title = "TỔNG ĐÃ CHI",
-                        value = FormatUtils.formatVnd(totalCost),
-                        subtitle = "${records.size} lần • ${String.format(Locale.US, "%.1f", totalLiters)} Lít",
-                        accentColor = PetrolBlue
                     )
                 }
             }
@@ -422,7 +498,7 @@ private fun FuelLogTabContent(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
-                    text = "LỊCH SỬ ĐỔ XĂNG (${records.size})",
+                    text = "LỊCH SỬ ĐỔ XĂNG (${scopedRecords.size}/${records.size})",
                     fontSize = 13.sp,
                     fontWeight = FontWeight.ExtraBold,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
@@ -435,7 +511,7 @@ private fun FuelLogTabContent(
             }
         }
 
-        if (records.isEmpty()) {
+        if (scopedRecords.isEmpty()) {
             item {
                 Card(
                     modifier = Modifier.fillMaxWidth(),
@@ -454,10 +530,10 @@ private fun FuelLogTabContent(
                             modifier = Modifier.size(48.dp)
                         )
                         Spacer(Modifier.height(12.dp))
-                        Text("Chưa có nhật ký đổ xăng", fontWeight = FontWeight.Bold, fontSize = 17.sp)
+                        Text("Chưa có lần đổ xăng trong ${quickScope.label.lowercase()}", fontWeight = FontWeight.Bold, fontSize = 16.sp)
                         Spacer(Modifier.height(6.dp))
                         Text(
-                            "Chỉ cần nhập số tiền vừa đổ (ví dụ 500.000đ), ứng dụng sẽ tự động quy đổi số lít theo giá Petrolimex đúng ngày đổ.",
+                            "Nhấn nút 'Ghi Đổ Xăng' hoặc chọn 'Tổng cộng' để xem toàn bộ lịch sử các lần đổ trước.",
                             fontSize = 13.sp,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
@@ -465,7 +541,7 @@ private fun FuelLogTabContent(
                 }
             }
         } else {
-            items(records, key = { it.id }) { item ->
+            items(scopedRecords, key = { it.id }) { item ->
                 FuelRecordItemCard(
                     record = item,
                     onEdit = { onEditRecord(item) },
@@ -936,7 +1012,6 @@ private fun SmartAddFuelBottomSheet(
                 fontWeight = FontWeight.ExtraBold
             )
 
-            // 1. Chọn Ngày & Khung Giờ (Trước 15h00 / Sau 15h00 ngày điều chỉnh Thứ 2 & Thứ 5)
             Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
                 Row(
                     modifier = Modifier.fillMaxWidth(),
@@ -958,7 +1033,6 @@ private fun SmartAddFuelBottomSheet(
                     }
                 }
 
-                // Nút chọn nhanh ngày
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -981,7 +1055,6 @@ private fun SmartAddFuelBottomSheet(
                     }
                 }
 
-                // Nút chọn khung giờ Trước 15h00 (Giá kỳ cũ) vs Sau 15h00 (Giá kỳ mới)
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.spacedBy(8.dp),
@@ -1026,7 +1099,6 @@ private fun SmartAddFuelBottomSheet(
                 }
             }
 
-            // 2. Nhập số tiền & Đơn giá
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(10.dp)
@@ -1074,7 +1146,6 @@ private fun SmartAddFuelBottomSheet(
                 )
             }
 
-            // 3. Hộp Kết Quả Tính Tự Động
             Surface(
                 color = PetrolBlue.copy(alpha = 0.08f),
                 shape = RoundedCornerShape(12.dp),
@@ -1133,7 +1204,6 @@ private fun SmartAddFuelBottomSheet(
                 }
             }
 
-            // 4. Nhập số ODO hiện tại
             Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
                 Row(
                     modifier = Modifier.fillMaxWidth(),
@@ -1168,7 +1238,6 @@ private fun SmartAddFuelBottomSheet(
                 )
             }
 
-            // 5. Chọn cây xăng
             Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
                 OutlinedTextField(
                     value = stationText,
@@ -1247,7 +1316,6 @@ private fun SmartAddFuelBottomSheet(
                         val pickedUtcMillis = datePickerState.selectedDateMillis
                         if (pickedUtcMillis != null) {
                             val pickedDate = Instant.ofEpochMilli(pickedUtcMillis).atZone(ZoneOffset.UTC).toLocalDate()
-                            // Giữ nguyên giờ hiện đang chọn (Trước 15h00 hoặc Sau 15h00)
                             val newMillis = LocalDateTime.of(
                                 pickedDate.year,
                                 pickedDate.monthValue,
