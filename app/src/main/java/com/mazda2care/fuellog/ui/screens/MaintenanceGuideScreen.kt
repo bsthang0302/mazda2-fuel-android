@@ -389,7 +389,7 @@ private fun NextMaintenanceCountdownCard(
                         fontWeight = FontWeight.Black
                     )
                     Text(
-                        text = "Khoảng ~$estDays ngày nữa (với lộ trình ${profile.dailyKm} km/ngày)",
+                        text = "Khoảng ~$estDaysRemaining ngày nữa (với lộ trình ${profile.dailyKm} km/ngày)",
                         color = Color(0xFF94A3B8),
                         fontSize = 11.sp
                     )
