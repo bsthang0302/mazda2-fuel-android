@@ -4,6 +4,7 @@ import android.app.Application
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.mazda2care.fuellog.data.AppDatabase
+import com.mazda2care.fuellog.data.FuelPriceFetcher
 import com.mazda2care.fuellog.data.FuelRepository
 import com.mazda2care.fuellog.model.CarProfile
 import com.mazda2care.fuellog.model.FuelPricePeriodEntity
@@ -119,13 +120,22 @@ class FuelViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
-    fun updateManualPrice(priceZone1: Double, priceZone2: Double, note: String) {
+    fun updateManualPrice(
+        priceZone1: Double,
+        priceZone2: Double,
+        effectiveEpochMillis: Long,
+        note: String
+    ) {
         viewModelScope.launch {
-            repo.addManualPricePeriod(priceZone1, priceZone2, note)
+            repo.addManualPricePeriod(priceZone1, priceZone2, effectiveEpochMillis, note)
             _profile.value = repo.getCarProfile()
         }
     }
 
+    /**
+     * Tìm đúng kỳ điều hành giá xăng có hiệu lực tại thời điểm đổ xăng (`epochMillis`).
+     * Ví dụ: Đổ sáng Thứ 5 lúc 10:00 (< 15:00) -> lấy kỳ cũ; Đổ chiều Thứ 5 lúc 16:30 (>= 15:00) -> lấy kỳ mới.
+     */
     fun getMatchedPeriodForDate(epochMillis: Long): FuelPricePeriodEntity? {
         val sorted = pricePeriods.value.sortedByDescending { it.epochMillis }
         return sorted.firstOrNull { it.epochMillis <= epochMillis } ?: sorted.lastOrNull()
@@ -134,7 +144,17 @@ class FuelViewModel(application: Application) : AndroidViewModel(application) {
     fun getPriceForDate(epochMillis: Long): Double {
         val period = getMatchedPeriodForDate(epochMillis)
         val zone = _profile.value.selectedPriceZone
+        val selectedProduct = _profile.value.selectedFuelProduct
+
         if (period != null) {
+            if (period.allFuelsJson.isNotBlank() && period.allFuelsJson != "{}") {
+                val decoded = FuelPriceFetcher.decodeItemsFromJson(period.allFuelsJson)
+                val item = decoded.firstOrNull { it.product == selectedProduct }
+                if (item != null) {
+                    val p = if (zone == PriceZone.ZONE_1) item.priceZone1 else item.priceZone2
+                    if (p > 0) return p
+                }
+            }
             return if (zone == PriceZone.ZONE_1) period.priceZone1 else period.priceZone2
         }
         return _profile.value.currentFuelPrice

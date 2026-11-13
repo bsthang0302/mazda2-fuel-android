@@ -39,7 +39,6 @@ import androidx.compose.material.icons.filled.FileDownload
 import androidx.compose.material.icons.filled.FileUpload
 import androidx.compose.material.icons.filled.LocalGasStation
 import androidx.compose.material.icons.filled.Refresh
-import androidx.compose.material.icons.filled.Speed
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.AssistChip
 import androidx.compose.material3.AssistChipDefaults
@@ -47,8 +46,9 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.Checkbox
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.DatePicker
+import androidx.compose.material3.DatePickerDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExtendedFloatingActionButton
 import androidx.compose.material3.FilterChip
@@ -69,6 +69,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.material3.rememberDatePickerState
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
@@ -77,7 +78,6 @@ import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -103,9 +103,11 @@ import com.mazda2care.fuellog.ui.theme.CostPurple
 import com.mazda2care.fuellog.ui.theme.EcoGreen
 import com.mazda2care.fuellog.ui.theme.FuelOrange
 import com.mazda2care.fuellog.ui.theme.PetrolBlue
-import kotlinx.coroutines.launch
 import java.time.Instant
+import java.time.LocalDateTime
 import java.time.ZoneId
+import java.time.ZoneOffset
+import java.util.Locale
 import kotlin.math.roundToInt
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -294,8 +296,8 @@ fun MainScreen(
         ManualUpdatePriceDialog(
             currentPrice = profile.currentFuelPrice,
             onDismiss = { showManualPriceDialog = false },
-            onConfirm = { zone1, zone2, note ->
-                viewModel.updateManualPrice(zone1, zone2, note)
+            onConfirm = { zone1, zone2, effectiveEpochMillis, note ->
+                viewModel.updateManualPrice(zone1, zone2, effectiveEpochMillis, note)
                 showManualPriceDialog = false
             }
         )
@@ -316,7 +318,6 @@ private fun FuelLogTabContent(
     onEditRecord: (FuelRecordEntity) -> Unit,
     onDeleteRecord: (FuelRecordEntity) -> Unit
 ) {
-    // Tính toán thống kê
     val nowZone = Instant.now().atZone(ZoneId.systemDefault())
     val thisMonthRecords = records.filter {
         val dt = Instant.ofEpochMilli(it.epochMillis).atZone(ZoneId.systemDefault())
@@ -327,7 +328,6 @@ private fun FuelLogTabContent(
     val totalCost = records.sumOf { it.totalCost }
     val totalLiters = records.sumOf { it.liters }
 
-    // Tính mức tiêu hao thực tế L/100km & đ/km theo ODO
     val sortedByOdo = records.sortedWith(compareBy<FuelRecordEntity> { it.odo }.thenBy { it.epochMillis })
     val totalDistance = if (sortedByOdo.size >= 2) {
         sortedByOdo.last().odo - sortedByOdo.first().odo
@@ -358,7 +358,6 @@ private fun FuelLogTabContent(
         contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 12.dp, bottom = 96.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
-        // 1. Banner Giá Xăng Tự Động Cập Nhật
         item {
             RealtimePriceBannerCard(
                 profile = profile,
@@ -371,7 +370,6 @@ private fun FuelLogTabContent(
             )
         }
 
-        // 2. Lưới 4 chỉ số KPI (Tiền xăng tháng này, Tiêu thụ thực tế, Chi phí/km, Tổng tích lũy)
         item {
             Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
                 Row(
@@ -382,7 +380,7 @@ private fun FuelLogTabContent(
                         modifier = Modifier.weight(1f),
                         title = "THÁNG NÀY",
                         value = FormatUtils.formatVnd(thisMonthCost),
-                        subtitle = "${thisMonthRecords.size} lần • ${String.format("%.1f", thisMonthLiters)} Lít",
+                        subtitle = "${thisMonthRecords.size} lần • ${String.format(Locale.US, "%.1f", thisMonthLiters)} Lít",
                         accentColor = FuelOrange
                     )
                     KpiStatCard(
@@ -408,14 +406,13 @@ private fun FuelLogTabContent(
                         modifier = Modifier.weight(1f),
                         title = "TỔNG ĐÃ CHI",
                         value = FormatUtils.formatVnd(totalCost),
-                        subtitle = "${records.size} lần • ${String.format("%.1f", totalLiters)} Lít",
+                        subtitle = "${records.size} lần • ${String.format(Locale.US, "%.1f", totalLiters)} Lít",
                         accentColor = PetrolBlue
                     )
                 }
             }
         }
 
-        // 3. Tiêu đề danh sách lịch sử
         item {
             Row(
                 modifier = Modifier
@@ -460,7 +457,7 @@ private fun FuelLogTabContent(
                         Text("Chưa có nhật ký đổ xăng", fontWeight = FontWeight.Bold, fontSize = 17.sp)
                         Spacer(Modifier.height(6.dp))
                         Text(
-                            "Chỉ cần nhập số tiền vừa đổ (ví dụ 500.000đ), ứng dụng sẽ tự động quy đổi số lít theo giá Petrolimex hôm nay.",
+                            "Chỉ cần nhập số tiền vừa đổ (ví dụ 500.000đ), ứng dụng sẽ tự động quy đổi số lít theo giá Petrolimex đúng ngày đổ.",
                             fontSize = 13.sp,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
@@ -525,7 +522,6 @@ private fun RealtimePriceBannerCard(
                     )
                 }
 
-                // Nút chuyển nhanh Vùng 1 / Vùng 2
                 Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
                     PriceZone.entries.forEach { zone ->
                         val selected = profile.selectedPriceZone == zone
@@ -591,7 +587,7 @@ private fun RealtimePriceBannerCard(
                     ) {
                         Icon(Icons.Default.Edit, contentDescription = null, modifier = Modifier.size(15.dp))
                         Spacer(Modifier.width(4.dp))
-                        Text("Chỉnh giá", fontSize = 12.sp)
+                        Text("Thêm kỳ giá", fontSize = 12.sp)
                     }
                 }
             }
@@ -884,6 +880,25 @@ private fun SmartAddFuelBottomSheet(
     var isFullTank by remember {
         mutableStateOf(editingRecord?.isFullTank ?: false)
     }
+    var showCalendarDialog by remember { mutableStateOf(false) }
+
+    val selectedZdt = Instant.ofEpochMilli(selectedEpochMillis).atZone(ZoneId.systemDefault())
+    val isBefore15h = selectedZdt.hour < 15
+
+    fun updateSelectedTimestamp(newMillis: Long) {
+        selectedEpochMillis = newMillis
+        unitPriceText = getPriceForDate(newMillis).toLong().toString()
+    }
+
+    fun setHourOnSelectedDay(hour: Int, minute: Int) {
+        val updatedMillis = selectedZdt
+            .withHour(hour)
+            .withMinute(minute)
+            .withSecond(0)
+            .toInstant()
+            .toEpochMilli()
+        updateSelectedTimestamp(updatedMillis)
+    }
 
     val parsedPrice = unitPriceText.replace(Regex("[^0-9]"), "").toDoubleOrNull() ?: profile.currentFuelPrice
     val parsedCost = costText.replace(Regex("[^0-9]"), "").toDoubleOrNull() ?: 0.0
@@ -921,36 +936,93 @@ private fun SmartAddFuelBottomSheet(
                 fontWeight = FontWeight.ExtraBold
             )
 
-            // 1. Chọn nhanh ngày đổ -> Tự động khớp giá xăng kỳ đó
+            // 1. Chọn Ngày & Khung Giờ (Trước 15h00 / Sau 15h00 ngày điều chỉnh Thứ 2 & Thứ 5)
             Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                Text(
-                    text = "Thời điểm đổ: ${FormatUtils.formatDateTime(selectedEpochMillis)}",
-                    fontSize = 13.sp,
-                    fontWeight = FontWeight.SemiBold
-                )
-                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = "Ngày giờ đổ: ${FormatUtils.formatDateTime(selectedEpochMillis)}",
+                        fontSize = 13.sp,
+                        fontWeight = FontWeight.Bold
+                    )
+                    TextButton(
+                        onClick = { showCalendarDialog = true },
+                        contentPadding = PaddingValues(horizontal = 8.dp, vertical = 2.dp)
+                    ) {
+                        Icon(Icons.Default.CalendarMonth, contentDescription = null, modifier = Modifier.size(16.dp))
+                        Spacer(Modifier.width(4.dp))
+                        Text("Chọn lịch...", fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                    }
+                }
+
+                // Nút chọn nhanh ngày
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .horizontalScroll(rememberScrollState()),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
                     listOf(
                         "Hôm nay" to 0L,
                         "Hôm qua" to 1L,
-                        "2 ngày trước" to 2L
+                        "2 ngày trước" to 2L,
+                        "3 ngày trước" to 3L
                     ).forEach { (label, daysAgo) ->
                         AssistChip(
                             onClick = {
                                 val targetMillis = System.currentTimeMillis() - daysAgo * 86_400_000L
-                                selectedEpochMillis = targetMillis
-                                unitPriceText = getPriceForDate(targetMillis).toLong().toString()
+                                updateSelectedTimestamp(targetMillis)
                             },
                             label = { Text(label, fontSize = 12.sp) }
                         )
                     }
                 }
-                if (matchedPeriod != null) {
+
+                // Nút chọn khung giờ Trước 15h00 (Giá kỳ cũ) vs Sau 15h00 (Giá kỳ mới)
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
                     Text(
-                        text = "⚡ Tự động khớp giá kỳ: ${matchedPeriod.note}",
-                        fontSize = 11.sp,
-                        color = EcoGreen,
-                        fontWeight = FontWeight.SemiBold
+                        text = "Khung giờ:",
+                        fontSize = 12.sp,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
+                    FilterChip(
+                        selected = isBefore15h,
+                        onClick = { setHourOnSelectedDay(10, 0) },
+                        label = { Text("☀️ Trước 15h00 (Giá cũ)", fontSize = 11.sp) }
+                    )
+                    FilterChip(
+                        selected = !isBefore15h,
+                        onClick = { setHourOnSelectedDay(16, 30) },
+                        label = { Text("🕒 Sau 15h00 (Giá mới)", fontSize = 11.sp) }
+                    )
+                }
+
+                if (matchedPeriod != null) {
+                    val matchedPriceVal = if (profile.selectedPriceZone == PriceZone.ZONE_1) {
+                        matchedPeriod.priceZone1
+                    } else {
+                        matchedPeriod.priceZone2
+                    }
+                    Surface(
+                        color = EcoGreen.copy(alpha = 0.12f),
+                        shape = RoundedCornerShape(8.dp),
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Text(
+                            text = "⚡ Đã tự động lấy giá đúng ngày & giờ đổ: ${matchedPeriod.note} • ${FormatUtils.formatVnd(matchedPriceVal)}/L",
+                            fontSize = 11.sp,
+                            color = EcoGreen,
+                            fontWeight = FontWeight.Bold,
+                            modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp)
+                        )
+                    }
                 }
             }
 
@@ -977,7 +1049,6 @@ private fun SmartAddFuelBottomSheet(
                 )
             }
 
-            // Các nút chọn nhanh số tiền (1-chạm)
             FlowRow(
                 horizontalArrangement = Arrangement.spacedBy(8.dp),
                 verticalArrangement = Arrangement.spacedBy(4.dp)
@@ -1003,7 +1074,7 @@ private fun SmartAddFuelBottomSheet(
                 )
             }
 
-            // 3. Hộp Kết Quả Tính Tự Động (Số lít, % bình, Quãng đường dự kiến)
+            // 3. Hộp Kết Quả Tính Tự Động
             Surface(
                 color = PetrolBlue.copy(alpha = 0.08f),
                 shape = RoundedCornerShape(12.dp),
@@ -1133,7 +1204,6 @@ private fun SmartAddFuelBottomSheet(
                 }
             }
 
-            // Nút Lưu
             Button(
                 onClick = {
                     onSave(
@@ -1164,6 +1234,44 @@ private fun SmartAddFuelBottomSheet(
             Spacer(Modifier.height(20.dp))
         }
     }
+
+    if (showCalendarDialog) {
+        val datePickerState = rememberDatePickerState(
+            initialSelectedDateMillis = selectedEpochMillis
+        )
+        DatePickerDialog(
+            onDismissRequest = { showCalendarDialog = false },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        val pickedUtcMillis = datePickerState.selectedDateMillis
+                        if (pickedUtcMillis != null) {
+                            val pickedDate = Instant.ofEpochMilli(pickedUtcMillis).atZone(ZoneOffset.UTC).toLocalDate()
+                            // Giữ nguyên giờ hiện đang chọn (Trước 15h00 hoặc Sau 15h00)
+                            val newMillis = LocalDateTime.of(
+                                pickedDate.year,
+                                pickedDate.monthValue,
+                                pickedDate.dayOfMonth,
+                                selectedZdt.hour,
+                                selectedZdt.minute
+                            ).atZone(ZoneId.systemDefault()).toInstant().toEpochMilli()
+                            updateSelectedTimestamp(newMillis)
+                        }
+                        showCalendarDialog = false
+                    }
+                ) {
+                    Text("Chọn ngày này", fontWeight = FontWeight.Bold)
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showCalendarDialog = false }) {
+                    Text("Hủy")
+                }
+            }
+        ) {
+            DatePicker(state = datePickerState)
+        }
+    }
 }
 
 @Composable
@@ -1183,7 +1291,6 @@ private fun PriceAndAnalyticsTabContent(
         contentPadding = PaddingValues(16.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
-        // 1. Bảng Giá Xăng Dầu Petrolimex Hôm Nay (Vùng 1 & Vùng 2)
         item {
             Card(
                 modifier = Modifier.fillMaxWidth(),
@@ -1222,7 +1329,6 @@ private fun PriceAndAnalyticsTabContent(
 
                     Spacer(Modifier.height(12.dp))
 
-                    // Header bảng
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
@@ -1308,7 +1414,6 @@ private fun PriceAndAnalyticsTabContent(
             }
         }
 
-        // 2. Biểu Đồ Biến Động Giá Xăng Qua Các Kỳ Điều Hành
         if (periods.size >= 2) {
             item {
                 PriceHistoryChartCard(
@@ -1318,7 +1423,6 @@ private fun PriceAndAnalyticsTabContent(
             }
         }
 
-        // 3. Danh sách lịch sử các kỳ điều chỉnh giá xăng
         item {
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -1355,7 +1459,7 @@ private fun PriceAndAnalyticsTabContent(
                     Column(modifier = Modifier.weight(1f)) {
                         Text(p.note, fontWeight = FontWeight.Bold, fontSize = 13.sp)
                         Text(
-                            text = "Áp dụng: ${FormatUtils.formatDateOnly(p.epochMillis)}",
+                            text = "Áp dụng từ: ${FormatUtils.formatDateTime(p.epochMillis)}",
                             fontSize = 11.sp,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
@@ -1479,7 +1583,6 @@ private fun CarAndBackupTabContent(
             .padding(16.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
-        // 1. Khối Sao lưu & Đồng bộ với máy Mac (mazda2_car_data.json)
         Card(
             modifier = Modifier.fillMaxWidth(),
             shape = RoundedCornerShape(16.dp),
@@ -1525,7 +1628,6 @@ private fun CarAndBackupTabContent(
             }
         }
 
-        // 2. Cấu hình thông tin xe & cây xăng quen thuộc
         Card(
             modifier = Modifier.fillMaxWidth(),
             shape = RoundedCornerShape(16.dp),
@@ -1635,29 +1737,52 @@ private fun CarAndBackupTabContent(
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun ManualUpdatePriceDialog(
     currentPrice: Double,
     onDismiss: () -> Unit,
-    onConfirm: (zone1: Double, zone2: Double, note: String) -> Unit
+    onConfirm: (zone1: Double, zone2: Double, effectiveEpochMillis: Long, note: String) -> Unit
 ) {
+    val defaultEffectiveMillis = remember {
+        val now = LocalDateTime.now(ZoneId.systemDefault())
+        LocalDateTime.of(now.year, now.monthValue, now.dayOfMonth, 15, 0, 0)
+            .atZone(ZoneId.systemDefault())
+            .toInstant()
+            .toEpochMilli()
+    }
+    var effectiveEpochMillis by remember { mutableLongStateOf(defaultEffectiveMillis) }
+    var showDatePicker by remember { mutableStateOf(false) }
+
     var zone2Input by remember { mutableStateOf(currentPrice.toInt().toString()) }
     var zone1Input by remember {
         val estZ1 = ((currentPrice / 1.02) / 10.0).roundToInt() * 10
         mutableStateOf(estZ1.toString())
     }
-    var noteInput by remember { mutableStateOf("Cập nhật theo giá cây xăng thực tế") }
+    var noteInput by remember {
+        mutableStateOf("Kỳ điều hành 15h00 ngày ${FormatUtils.formatDateOnly(effectiveEpochMillis)}")
+    }
 
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text("Cập Nhật Đơn Giá Xăng", fontWeight = FontWeight.Bold) },
+        title = { Text("Thêm / Cập Nhật Kỳ Giá Xăng", fontWeight = FontWeight.Bold) },
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
                 Text(
-                    "Nhập đơn giá bán lẻ xăng Petrolimex (VNĐ/Lít):",
-                    fontSize = 13.sp,
+                    "Mốc áp dụng mặc định là 15h00 chiều ngày điều hành (Thứ 2 / Thứ 5):",
+                    fontSize = 12.sp,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
+
+                OutlinedButton(
+                    onClick = { showDatePicker = true },
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Icon(Icons.Default.CalendarMonth, contentDescription = null, modifier = Modifier.size(16.dp))
+                    Spacer(Modifier.width(6.dp))
+                    Text("Áp dụng từ: 15h00 ngày ${FormatUtils.formatDateOnly(effectiveEpochMillis)}")
+                }
+
                 OutlinedTextField(
                     value = zone2Input,
                     onValueChange = {
@@ -1691,10 +1816,10 @@ private fun ManualUpdatePriceDialog(
                 onClick = {
                     val z2 = zone2Input.toDoubleOrNull() ?: currentPrice
                     val z1 = zone1Input.toDoubleOrNull() ?: z2
-                    onConfirm(z1, z2, noteInput)
+                    onConfirm(z1, z2, effectiveEpochMillis, noteInput)
                 }
             ) {
-                Text("Lưu giá mới")
+                Text("Lưu kỳ giá")
             }
         },
         dismissButton = {
@@ -1703,4 +1828,36 @@ private fun ManualUpdatePriceDialog(
             }
         }
     )
+
+    if (showDatePicker) {
+        val datePickerState = rememberDatePickerState(initialSelectedDateMillis = effectiveEpochMillis)
+        DatePickerDialog(
+            onDismissRequest = { showDatePicker = false },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        val pickedUtc = datePickerState.selectedDateMillis
+                        if (pickedUtc != null) {
+                            val d = Instant.ofEpochMilli(pickedUtc).atZone(ZoneOffset.UTC).toLocalDate()
+                            effectiveEpochMillis = LocalDateTime.of(d.year, d.monthValue, d.dayOfMonth, 15, 0, 0)
+                                .atZone(ZoneId.systemDefault())
+                                .toInstant()
+                                .toEpochMilli()
+                            noteInput = "Kỳ điều hành 15h00 ngày ${FormatUtils.formatDateOnly(effectiveEpochMillis)}"
+                        }
+                        showDatePicker = false
+                    }
+                ) {
+                    Text("Chọn", fontWeight = FontWeight.Bold)
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showDatePicker = false }) {
+                    Text("Hủy")
+                }
+            }
+        ) {
+            DatePicker(state = datePickerState)
+        }
+    }
 }

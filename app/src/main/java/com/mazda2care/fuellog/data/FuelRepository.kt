@@ -24,7 +24,7 @@ class FuelRepository(private val context: Context, private val dao: FuelDao) {
     val fuelPricePeriodsFlow: Flow<List<FuelPricePeriodEntity>> = dao.observeFuelPricePeriods()
 
     suspend fun ensureSeeded() = withContext(Dispatchers.IO) {
-        val isSeeded = prefs.getBoolean("is_seeded_v1", false)
+        val isSeeded = prefs.getBoolean("is_seeded_v2", false)
         if (isSeeded) return@withContext
 
         try {
@@ -32,9 +32,9 @@ class FuelRepository(private val context: Context, private val dao: FuelDao) {
                 .bufferedReader(Charsets.UTF_8)
                 .use { it.readText() }
             importFromJsonString(rawJson, replaceAll = true)
-            prefs.edit().putBoolean("is_seeded_v1", true).apply()
+            prefs.edit().putBoolean("is_seeded_v2", true).apply()
         } catch (_: Exception) {
-            prefs.edit().putBoolean("is_seeded_v1", true).apply()
+            prefs.edit().putBoolean("is_seeded_v2", true).apply()
         }
     }
 
@@ -86,7 +86,6 @@ class FuelRepository(private val context: Context, private val dao: FuelDao) {
             val decoded = FuelPriceFetcher.decodeItemsFromJson(raw)
             if (decoded.isNotEmpty()) return decoded
         }
-        // Mặc định bảng giá Petrolimex khi chưa có mạng lần đầu
         return listOf(
             LiveFuelItemPrice(FuelProduct.RON95_V, "Xăng RON 95-V", 25450.0, 25950.0),
             LiveFuelItemPrice(FuelProduct.RON95_III, "Xăng RON 95-III", 24910.0, 25400.0),
@@ -100,22 +99,17 @@ class FuelRepository(private val context: Context, private val dao: FuelDao) {
         return prefs.getString("last_sync_note", "Kỳ điều hành gần nhất • Đã lưu offline") ?: ""
     }
 
-    fun getLastSyncTimeMillis(): Long {
-        return prefs.getLong("last_sync_epoch", 0L)
-    }
-
     suspend fun syncLiveFuelPrices(): LiveFuelFetchResult = withContext(Dispatchers.IO) {
         val result = FuelPriceFetcher.fetchLatestPetrolimexPrices()
         if (result.success && result.items.isNotEmpty()) {
             val encoded = FuelPriceFetcher.encodeItemsToJson(result.items)
-            val noteText = "${result.updatedTitle} (${FormatUtils.formatDateTime(result.effectiveEpochMillis)})"
+            val noteText = "${result.updatedTitle}"
             prefs.edit()
                 .putString("cached_live_fuels_json", encoded)
                 .putString("last_sync_note", noteText)
-                .putLong("last_sync_epoch", result.effectiveEpochMillis)
+                .putLong("last_sync_epoch", System.currentTimeMillis())
                 .apply()
 
-            // Cập nhật đơn giá theo loại xăng & vùng người dùng đang chọn
             val profile = getCarProfile()
             val selectedItem = result.items.firstOrNull { it.product == profile.selectedFuelProduct }
                 ?: result.items.firstOrNull { it.product == FuelProduct.RON95_III }
@@ -132,6 +126,7 @@ class FuelRepository(private val context: Context, private val dao: FuelDao) {
             }
 
             // Kiểm tra xem kỳ điều hành mới nhất trong DB có khác giá không -> Tự động thêm kỳ giá mới
+            // Mốc hiệu lực được chuẩn hóa về đúng 15:00 chiều của ngày điều hành
             val existingPeriods = dao.getAllFuelPricePeriods()
             val latestPeriod = existingPeriods.firstOrNull()
             val ron95_3 = result.items.firstOrNull { it.product == FuelProduct.RON95_III } ?: selectedItem
@@ -156,7 +151,7 @@ class FuelRepository(private val context: Context, private val dao: FuelDao) {
                     epochMillis = result.effectiveEpochMillis,
                     priceZone1 = ron95_3.priceZone1,
                     priceZone2 = ron95_3.priceZone2,
-                    note = "Tự động cập nhật ${FormatUtils.formatDateOnly(result.effectiveEpochMillis)}$deltaStr",
+                    note = "Kỳ điều hành 15h00 ngày ${FormatUtils.formatDateOnly(result.effectiveEpochMillis)}$deltaStr",
                     isAutoFetched = true,
                     allFuelsJson = encoded
                 )
@@ -204,30 +199,33 @@ class FuelRepository(private val context: Context, private val dao: FuelDao) {
     suspend fun addManualPricePeriod(
         priceZone1: Double,
         priceZone2: Double,
+        effectiveEpochMillis: Long,
         note: String
     ) = withContext(Dispatchers.IO) {
-        val now = System.currentTimeMillis()
         val period = FuelPricePeriodEntity(
             id = UUID.randomUUID().toString().uppercase(),
-            effectiveDateIso = FormatUtils.millisToIso(now),
-            epochMillis = now,
+            effectiveDateIso = FormatUtils.millisToIso(effectiveEpochMillis),
+            epochMillis = effectiveEpochMillis,
             priceZone1 = priceZone1,
             priceZone2 = priceZone2,
-            note = note.ifBlank { "Cập nhật thủ công (${FormatUtils.formatDateOnly(now)})" },
+            note = note.ifBlank { "Kỳ điều hành 15h00 ngày ${FormatUtils.formatDateOnly(effectiveEpochMillis)}" },
             isAutoFetched = false
         )
         dao.insertFuelPricePeriod(period)
 
-        val profile = getCarProfile()
-        val newActive = if (profile.selectedPriceZone == PriceZone.ZONE_1) priceZone1 else priceZone2
-        saveCarProfile(profile.copy(currentFuelPrice = newActive))
+        val allPeriods = dao.getAllFuelPricePeriods()
+        val latest = allPeriods.maxByOrNull { it.epochMillis }
+        if (latest != null && latest.id == period.id) {
+            val profile = getCarProfile()
+            val newActive = if (profile.selectedPriceZone == PriceZone.ZONE_1) priceZone1 else priceZone2
+            saveCarProfile(profile.copy(currentFuelPrice = newActive))
+        }
     }
 
     private suspend fun recalculateTripsAndEfficiency() {
         val all = dao.getAllFuelRecords()
         if (all.isEmpty()) return
 
-        // Sắp xếp tăng dần theo thời gian & ODO để tính quãng đường di chuyển giữa các lần đổ
         val chronological = all.sortedWith(compareBy<FuelRecordEntity> { it.epochMillis }.thenBy { it.odo })
         val updated = mutableListOf<FuelRecordEntity>()
 
@@ -261,9 +259,6 @@ class FuelRepository(private val context: Context, private val dao: FuelDao) {
         dao.insertAllFuelRecords(updated)
     }
 
-    /**
-     * Xuất toàn bộ dữ liệu ra định dạng JSON tương thích 100% với file `mazda2_car_data.json` trên máy Mac.
-     */
     suspend fun exportToJsonString(): String = withContext(Dispatchers.IO) {
         val baseTemplateStr = prefs.getString("raw_mac_template_json", null) ?: try {
             context.assets.open("mazda2_car_data.json").bufferedReader(Charsets.UTF_8).use { it.readText() }
@@ -326,9 +321,6 @@ class FuelRepository(private val context: Context, private val dao: FuelDao) {
         root.toString(2)
     }
 
-    /**
-     * Nhập dữ liệu từ file JSON (`mazda2_car_data.json` từ Mac hoặc file sao lưu Android).
-     */
     suspend fun importFromJsonString(jsonStr: String, replaceAll: Boolean = true): Int = withContext(Dispatchers.IO) {
         val root = JSONObject(jsonStr)
         prefs.edit().putString("raw_mac_template_json", jsonStr).apply()

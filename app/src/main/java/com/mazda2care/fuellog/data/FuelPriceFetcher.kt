@@ -10,12 +10,17 @@ import java.io.BufferedReader
 import java.io.InputStreamReader
 import java.net.HttpURLConnection
 import java.net.URL
+import java.time.LocalDate
+import java.time.LocalDateTime
+import java.time.ZoneId
+import java.time.format.DateTimeFormatter
 import java.util.Locale
 import kotlin.math.roundToInt
 
 object FuelPriceFetcher {
 
     private const val WEBGIA_PETROLIMEX_URL = "https://webgia.com/gia-xang-dau/petrolimex/"
+    private val VN_ZONE = ZoneId.of("Asia/Ho_Chi_Minh")
 
     suspend fun fetchLatestPetrolimexPrices(): LiveFuelFetchResult = withContext(Dispatchers.IO) {
         try {
@@ -23,10 +28,11 @@ object FuelPriceFetcher {
             val parsedItems = parseWebGiaPetrolimexHtml(html)
             if (parsedItems.isNotEmpty()) {
                 val updatedNote = extractUpdateTimestampNote(html)
+                val effectiveMillis = extractEffectiveAt15hMillis(html)
                 return@withContext LiveFuelFetchResult(
                     success = true,
                     updatedTitle = updatedNote,
-                    effectiveEpochMillis = System.currentTimeMillis(),
+                    effectiveEpochMillis = effectiveMillis,
                     items = parsedItems,
                     sourceUrl = WEBGIA_PETROLIMEX_URL
                 )
@@ -49,6 +55,33 @@ object FuelPriceFetcher {
                 errorMessage = e.localizedMessage ?: "Lỗi mạng"
             )
         }
+    }
+
+    /**
+     * Chuẩn hóa mốc thời gian áp dụng giá mới về đúng 15:00 chiều (giờ Việt Nam)
+     * của ngày điều chỉnh để phân biệt chính xác đổ xăng Trước 15h00 (giá cũ) và Sau 15h00 (giá mới).
+     */
+    internal fun extractEffectiveAt15hMillis(html: String): Long {
+        val dateRegex = Regex("(\\d{1,2})/(\\d{1,2})/(\\d{4})")
+        val match = dateRegex.find(html)
+        val targetDate = if (match != null) {
+            try {
+                val d = match.groupValues[1].toInt()
+                val m = match.groupValues[2].toInt()
+                val y = match.groupValues[3].toInt()
+                LocalDate.of(y, m, d)
+            } catch (_: Exception) {
+                LocalDate.now(VN_ZONE)
+            }
+        } else {
+            LocalDate.now(VN_ZONE)
+        }
+
+        // Đặt mốc áp dụng chuẩn là 15:00:00 chiều theo quy định điều hành giá xăng dầu tại Việt Nam
+        return LocalDateTime.of(targetDate.year, targetDate.monthValue, targetDate.dayOfMonth, 15, 0, 0)
+            .atZone(VN_ZONE)
+            .toInstant()
+            .toEpochMilli()
     }
 
     private fun downloadHtml(urlString: String): String {
@@ -84,7 +117,6 @@ object FuelPriceFetcher {
     internal fun parseWebGiaPetrolimexHtml(html: String): List<LiveFuelItemPrice> {
         val results = mutableMapOf<FuelProduct, LiveFuelItemPrice>()
 
-        // Tìm tất cả các dòng <tr>...</tr> trong bảng giá
         val trRegex = Regex("<tr[^>]*>(.*?)</tr>", setOf(RegexOption.IGNORE_CASE, RegexOption.DOT_MATCHES_ALL))
         val tdRegex = Regex("<t[dh][^>]*>(.*?)</t[dh]>", setOf(RegexOption.IGNORE_CASE, RegexOption.DOT_MATCHES_ALL))
 
@@ -104,7 +136,6 @@ object FuelPriceFetcher {
                     val effectivePrice2 = if (price2 != null && price2 > 10_000) {
                         price2
                     } else {
-                        // Quy tắc Vùng 2 Petrolimex (+2% làm tròn đến chục đồng)
                         ((price1 * 1.02) / 10.0).roundToInt() * 10.0
                     }
 
@@ -137,7 +168,6 @@ object FuelPriceFetcher {
     }
 
     private fun parsePriceNumber(raw: String): Double? {
-        // Loại bỏ ký tự không phải số, giữ lại chữ số (ví dụ "25.400" hoặc "25,400" -> 25400)
         val digitsOnly = raw.replace(Regex("[^0-9]"), "")
         if (digitsOnly.length in 4..6) {
             return digitsOnly.toDoubleOrNull()
@@ -154,7 +184,8 @@ object FuelPriceFetcher {
         return if (match != null) {
             cleanHtmlText(match.groupValues[1])
         } else {
-            "Bảng giá Petrolimex trực tuyến mới nhất"
+            val dtf = DateTimeFormatter.ofPattern("dd/MM/yyyy")
+            "Bảng giá Petrolimex (${LocalDate.now(VN_ZONE).format(dtf)})"
         }
     }
 
