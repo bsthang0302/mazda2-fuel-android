@@ -190,6 +190,15 @@ object FormatUtils {
         return "${currencyFormat.format(amount.toLong())} đ"
     }
 
+    fun formatCompactVnd(amount: Double): String {
+        val v = amount.toLong()
+        return when {
+            v >= 100_000_000L -> String.format(Locale("vi", "VN"), "%.2f Tr.đ", amount / 1_000_000.0)
+            v >= 10_000_000L -> String.format(Locale("vi", "VN"), "%.2f Triệu", amount / 1_000_000.0)
+            else -> "${currencyFormat.format(v)} đ"
+        }
+    }
+
     fun formatVndNumberOnly(amount: Double): String {
         return currencyFormat.format(amount.toLong())
     }

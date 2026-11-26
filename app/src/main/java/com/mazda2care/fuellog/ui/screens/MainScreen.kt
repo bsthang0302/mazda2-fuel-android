@@ -44,6 +44,8 @@ import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.AssistChip
 import androidx.compose.material3.AssistChipDefaults
+import androidx.compose.material3.Badge
+import androidx.compose.material3.BadgedBox
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
@@ -90,8 +92,12 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.input.OffsetMapping
+import androidx.compose.ui.text.input.TransformedText
+import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -123,6 +129,51 @@ private enum class HomeQuickScope(val label: String) {
     MONTH("Tháng này"),
     YEAR("Năm nay"),
     ALL("Tổng cộng")
+}
+
+/**
+ * Tự động định dạng dấu chấm hàng nghìn (500.000, 12.650) ngay khi người dùng đang gõ số.
+ */
+class ThousandSeparatorTransformation : VisualTransformation {
+    override fun filter(text: AnnotatedString): TransformedText {
+        val original = text.text
+        if (original.isEmpty() || !original.all { it.isDigit() }) {
+            return TransformedText(text, OffsetMapping.Identity)
+        }
+
+        val sb = StringBuilder()
+        val n = original.length
+        val origToTrans = IntArray(n + 1)
+        for (i in 0 until n) {
+            if (i > 0 && (n - i) % 3 == 0) {
+                sb.append('.')
+            }
+            origToTrans[i] = sb.length
+            sb.append(original[i])
+        }
+        origToTrans[n] = sb.length
+        val transformedStr = sb.toString()
+
+        val transToOrig = IntArray(transformedStr.length + 1)
+        var origIdx = 0
+        for (j in 0 until transformedStr.length) {
+            transToOrig[j] = origIdx
+            if (transformedStr[j] != '.') {
+                origIdx++
+            }
+        }
+        transToOrig[transformedStr.length] = n
+
+        val mapping = object : OffsetMapping {
+            override fun originalToTransformed(offset: Int): Int =
+                origToTrans[offset.coerceIn(0, n)]
+
+            override fun transformedToOriginal(offset: Int): Int =
+                transToOrig[offset.coerceIn(0, transformedStr.length)]
+        }
+
+        return TransformedText(AnnotatedString(transformedStr), mapping)
+    }
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -226,36 +277,53 @@ fun MainScreen(
             }
         },
         bottomBar = {
+            val isMaintAlert = profile.isMaintenanceDueSoon || profile.isInjectorCleanerDueSoon
             NavigationBar {
                 NavigationBarItem(
                     selected = selectedTab == 0,
                     onClick = { selectedTab = 0 },
                     icon = { Icon(Icons.Default.LocalGasStation, contentDescription = null) },
-                    label = { Text("Nhật ký", fontSize = 10.sp) }
+                    label = { Text("Nhật ký", fontSize = 11.sp, fontWeight = if (selectedTab == 0) FontWeight.Bold else FontWeight.Medium) }
                 )
                 NavigationBarItem(
                     selected = selectedTab == 1,
                     onClick = { selectedTab = 1 },
                     icon = { Icon(Icons.Default.Analytics, contentDescription = null) },
-                    label = { Text("Thống kê", fontSize = 10.sp) }
+                    label = { Text("Chi tiêu", fontSize = 11.sp, fontWeight = if (selectedTab == 1) FontWeight.Bold else FontWeight.Medium) }
                 )
                 NavigationBarItem(
                     selected = selectedTab == 2,
                     onClick = { selectedTab = 2 },
-                    icon = { Icon(Icons.Default.Build, contentDescription = null) },
-                    label = { Text("Bảo dưỡng", fontSize = 10.sp) }
+                    icon = {
+                        BadgedBox(
+                            badge = {
+                                if (isMaintAlert) {
+                                    Badge(containerColor = FuelOrange, contentColor = Color.White) {
+                                        Text("!")
+                                    }
+                                } else {
+                                    Badge(containerColor = EcoGreen, contentColor = Color.White) {
+                                        Text("${(profile.kmUntilNextMaintenance / 1000).coerceAtLeast(1)}k")
+                                    }
+                                }
+                            }
+                        ) {
+                            Icon(Icons.Default.Build, contentDescription = null)
+                        }
+                    },
+                    label = { Text("Bảo dưỡng", fontSize = 11.sp, fontWeight = if (selectedTab == 2) FontWeight.Bold else FontWeight.Medium) }
                 )
                 NavigationBarItem(
                     selected = selectedTab == 3,
                     onClick = { selectedTab = 3 },
                     icon = { Icon(Icons.Default.PriceChange, contentDescription = null) },
-                    label = { Text("Giá xăng", fontSize = 10.sp) }
+                    label = { Text("Giá xăng", fontSize = 11.sp, fontWeight = if (selectedTab == 3) FontWeight.Bold else FontWeight.Medium) }
                 )
                 NavigationBarItem(
                     selected = selectedTab == 4,
                     onClick = { selectedTab = 4 },
                     icon = { Icon(Icons.Default.DirectionsCar, contentDescription = null) },
-                    label = { Text("Xe & Sao lưu", fontSize = 10.sp) }
+                    label = { Text("Hồ sơ xe", fontSize = 11.sp, fontWeight = if (selectedTab == 4) FontWeight.Bold else FontWeight.Medium) }
                 )
             }
         }
@@ -532,14 +600,14 @@ private fun FuelLogTabContent(
                     KpiStatCard(
                         modifier = Modifier.weight(1f),
                         title = "CHI TIÊU (${quickScope.label.uppercase()})",
-                        value = FormatUtils.formatVnd(scopedCost),
+                        value = FormatUtils.formatCompactVnd(scopedCost),
                         subtitle = "${scopedRecords.size} lần • ${String.format(Locale.US, "%.1f", scopedLiters)} Lít",
                         accentColor = FuelOrange
                     )
                     KpiStatCard(
                         modifier = Modifier.weight(1f),
                         title = "TỔNG TIỀN TÍCH LŨY",
-                        value = FormatUtils.formatVnd(totalAllTimeCost),
+                        value = FormatUtils.formatCompactVnd(totalAllTimeCost),
                         subtitle = "${records.size} lần • ${String.format(Locale.US, "%.1f", totalAllTimeLiters)} Lít",
                         accentColor = PetrolBlue
                     )
@@ -1070,6 +1138,8 @@ private fun SmartAddFuelBottomSheet(
         mutableStateOf(editingRecord?.isFullTank ?: false)
     }
     var showCalendarDialog by remember { mutableStateOf(false) }
+    var showDateTimeExpanded by remember { mutableStateOf(editingRecord != null) }
+    val thousandTransform = remember { ThousandSeparatorTransformation() }
 
     val selectedZdt = Instant.ofEpochMilli(selectedEpochMillis).atZone(ZoneId.systemDefault())
     val isBefore15h = selectedZdt.hour < 15
@@ -1116,102 +1186,114 @@ private fun SmartAddFuelBottomSheet(
             modifier = Modifier
                 .fillMaxWidth()
                 .verticalScroll(rememberScrollState())
-                .padding(horizontal = 20.dp, vertical = 8.dp),
-            verticalArrangement = Arrangement.spacedBy(14.dp)
+                .padding(horizontal = 20.dp, vertical = 6.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
             Text(
-                text = if (editingRecord == null) "Ghi Nhận Lần Đổ Xăng Mới" else "Chỉnh Sửa Lần Đổ Xăng",
-                fontSize = 19.sp,
+                text = if (editingRecord == null) "Ghi Nhận Lần Đổ Xăng (5 Giây)" else "Chỉnh Sửa Lần Đổ Xăng",
+                fontSize = 18.sp,
                 fontWeight = FontWeight.ExtraBold
             )
 
-            Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
+            // 1. Thanh Ngày/Giờ thu gọn 1 dòng thông minh (Bấm để mở rộng khi nhập bù ngày cũ)
+            Surface(
+                color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.7f),
+                shape = RoundedCornerShape(10.dp),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clickable { showDateTimeExpanded = !showDateTimeExpanded }
+            ) {
+                Column(
+                    modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp),
+                    verticalArrangement = Arrangement.spacedBy(6.dp)
                 ) {
-                    Text(
-                        text = "Ngày giờ đổ: ${FormatUtils.formatDateTime(selectedEpochMillis)}",
-                        fontSize = 13.sp,
-                        fontWeight = FontWeight.Bold
-                    )
-                    TextButton(
-                        onClick = { showCalendarDialog = true },
-                        contentPadding = PaddingValues(horizontal = 8.dp, vertical = 2.dp)
-                    ) {
-                        Icon(Icons.Default.CalendarMonth, contentDescription = null, modifier = Modifier.size(16.dp))
-                        Spacer(Modifier.width(4.dp))
-                        Text("Chọn lịch...", fontSize = 12.sp, fontWeight = FontWeight.Bold)
-                    }
-                }
-
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .horizontalScroll(rememberScrollState()),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
-                    listOf(
-                        "Hôm nay" to 0L,
-                        "Hôm qua" to 1L,
-                        "2 ngày trước" to 2L,
-                        "3 ngày trước" to 3L
-                    ).forEach { (label, daysAgo) ->
-                        AssistChip(
-                            onClick = {
-                                val targetMillis = System.currentTimeMillis() - daysAgo * 86_400_000L
-                                updateSelectedTimestamp(targetMillis)
-                            },
-                            label = { Text(label, fontSize = 12.sp) }
-                        )
-                    }
-                }
-
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Text(
-                        text = "Khung giờ:",
-                        fontSize = 12.sp,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                    FilterChip(
-                        selected = isBefore15h,
-                        onClick = { setHourOnSelectedDay(10, 0) },
-                        label = { Text("☀️ Trước 15h00 (Giá cũ)", fontSize = 11.sp) }
-                    )
-                    FilterChip(
-                        selected = !isBefore15h,
-                        onClick = { setHourOnSelectedDay(16, 30) },
-                        label = { Text("🕒 Sau 15h00 (Giá mới)", fontSize = 11.sp) }
-                    )
-                }
-
-                if (matchedPeriod != null) {
-                    val matchedPriceVal = if (profile.selectedPriceZone == PriceZone.ZONE_1) {
-                        matchedPeriod.priceZone1
-                    } else {
-                        matchedPeriod.priceZone2
-                    }
-                    Surface(
-                        color = EcoGreen.copy(alpha = 0.12f),
-                        shape = RoundedCornerShape(8.dp),
-                        modifier = Modifier.fillMaxWidth()
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
                     ) {
                         Text(
-                            text = "⚡ Đã tự động lấy giá đúng ngày & giờ đổ: ${matchedPeriod.note} • ${FormatUtils.formatVnd(matchedPriceVal)}/L",
+                            text = "🕒 ${FormatUtils.formatDateTime(selectedEpochMillis)} • ${if (isBefore15h) "Trước 15h" else "Sau 15h"}",
+                            fontSize = 12.sp,
+                            fontWeight = FontWeight.Bold
+                        )
+                        Text(
+                            text = if (showDateTimeExpanded) "Thu gọn ▴" else "Đổi ngày/giờ ▾",
+                            fontSize = 12.sp,
+                            fontWeight = FontWeight.ExtraBold,
+                            color = PetrolBlue
+                        )
+                    }
+
+                    if (matchedPeriod != null) {
+                        val matchedPriceVal = if (profile.selectedPriceZone == PriceZone.ZONE_1) {
+                            matchedPeriod.priceZone1
+                        } else {
+                            matchedPeriod.priceZone2
+                        }
+                        Text(
+                            text = "⚡ Tự khớp giá đúng kỳ: ${FormatUtils.formatVnd(matchedPriceVal)}/L (${matchedPeriod.note})",
                             fontSize = 11.sp,
                             color = EcoGreen,
                             fontWeight = FontWeight.Bold,
-                            modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp)
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
                         )
+                    }
+
+                    if (showDateTimeExpanded) {
+                        HorizontalDivider(color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.2f))
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .horizontalScroll(rememberScrollState()),
+                            horizontalArrangement = Arrangement.spacedBy(6.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            listOf(
+                                "Hôm nay" to 0L,
+                                "Hôm qua" to 1L,
+                                "2 ngày trước" to 2L,
+                                "3 ngày trước" to 3L
+                            ).forEach { (label, daysAgo) ->
+                                AssistChip(
+                                    onClick = {
+                                        val targetMillis = System.currentTimeMillis() - daysAgo * 86_400_000L
+                                        updateSelectedTimestamp(targetMillis)
+                                    },
+                                    label = { Text(label, fontSize = 11.sp) }
+                                )
+                            }
+                            AssistChip(
+                                onClick = { showCalendarDialog = true },
+                                leadingIcon = {
+                                    Icon(Icons.Default.CalendarMonth, contentDescription = null, modifier = Modifier.size(14.dp))
+                                },
+                                label = { Text("Chọn lịch...", fontSize = 11.sp, fontWeight = FontWeight.Bold) }
+                            )
+                        }
+
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(8.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            FilterChip(
+                                selected = isBefore15h,
+                                onClick = { setHourOnSelectedDay(10, 0) },
+                                label = { Text("☀️ Trước 15h00 (Giá cũ)", fontSize = 11.sp) }
+                            )
+                            FilterChip(
+                                selected = !isBefore15h,
+                                onClick = { setHourOnSelectedDay(16, 30) },
+                                label = { Text("🕒 Sau 15h00 (Giá mới)", fontSize = 11.sp) }
+                            )
+                        }
                     }
                 }
             }
 
+            // 2. Ô Nhập Số Tiền & Đơn Giá (Tự động tách dấu chấm hàng nghìn 500.000, 25.400)
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(10.dp)
@@ -1220,14 +1302,16 @@ private fun SmartAddFuelBottomSheet(
                     value = costText,
                     onValueChange = { costText = it.filter { ch -> ch.isDigit() } },
                     label = { Text("Số tiền đổ (VNĐ)") },
+                    visualTransformation = thousandTransform,
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                     singleLine = true,
-                    modifier = Modifier.weight(1.4f)
+                    modifier = Modifier.weight(1.35f)
                 )
                 OutlinedTextField(
                     value = unitPriceText,
                     onValueChange = { unitPriceText = it.filter { ch -> ch.isDigit() } },
                     label = { Text("Đơn giá (đ/L)") },
+                    visualTransformation = thousandTransform,
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                     singleLine = true,
                     modifier = Modifier.weight(1f)
@@ -1364,30 +1448,31 @@ private fun SmartAddFuelBottomSheet(
             }
 
             Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                val basePrevOdo = prevRecord?.odo ?: profile.currentOdo
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
                     Text("Số ODO trên đồng hồ xe (km):", fontSize = 13.sp, fontWeight = FontWeight.SemiBold)
-                    if (prevRecord != null) {
-                        Text(
-                            text = "Lần trước: ${prevRecord.odo} km",
-                            fontSize = 12.sp,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    }
+                    Text(
+                        text = "Lần trước: ${FormatUtils.formatVndNumberOnly(basePrevOdo.toDouble())} km",
+                        fontSize = 12.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = PetrolBlue
+                    )
                 }
                 OutlinedTextField(
                     value = odoText,
                     onValueChange = { odoText = it.filter { ch -> ch.isDigit() } },
                     singleLine = true,
+                    visualTransformation = thousandTransform,
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                     trailingIcon = {
                         if (tripVal > 0) {
                             Text(
-                                text = "+$tripVal km",
-                                color = PetrolBlue,
-                                fontWeight = FontWeight.Bold,
+                                text = "+${FormatUtils.formatVndNumberOnly(tripVal.toDouble())} km",
+                                color = EcoGreen,
+                                fontWeight = FontWeight.ExtraBold,
                                 fontSize = 12.sp,
                                 modifier = Modifier.padding(end = 12.dp)
                             )
@@ -1395,6 +1480,35 @@ private fun SmartAddFuelBottomSheet(
                     },
                     modifier = Modifier.fillMaxWidth()
                 )
+
+                // Nút cộng nhanh quãng đường đi được từ lần đổ trước (Thao tác 1 chạm không cần gõ phím)
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .horizontalScroll(rememberScrollState()),
+                    horizontalArrangement = Arrangement.spacedBy(6.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = "Cộng nhanh ODO:",
+                        fontSize = 11.sp,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                    listOf(250, 350, 450, 550, 650).forEach { addKm ->
+                        val targetOdo = basePrevOdo + addKm
+                        FilterChip(
+                            selected = currentOdoVal == targetOdo,
+                            onClick = { odoText = targetOdo.toString() },
+                            label = {
+                                Text(
+                                    text = "+$addKm km",
+                                    fontSize = 11.sp,
+                                    fontWeight = FontWeight.Bold
+                                )
+                            }
+                        )
+                    }
+                }
             }
 
             // 5. Chọn nhanh Top 5 Hãng Xăng phổ biến nhất
@@ -2082,6 +2196,7 @@ private fun ManualUpdatePriceDialog(
                         }
                     },
                     label = { Text("Giá Vùng 2 - Đồng Tháp (đ/L)") },
+                    visualTransformation = remember { ThousandSeparatorTransformation() },
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                     singleLine = true
                 )
@@ -2113,6 +2228,7 @@ private fun ManualUpdatePriceDialog(
                     value = zone1Input,
                     onValueChange = { zone1Input = it.filter { ch -> ch.isDigit() } },
                     label = { Text("Giá Vùng 1 (đ/L)") },
+                    visualTransformation = remember { ThousandSeparatorTransformation() },
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                     singleLine = true
                 )

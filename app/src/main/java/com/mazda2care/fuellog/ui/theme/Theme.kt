@@ -7,25 +7,27 @@ import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
 
-val FuelOrange = Color(0xFFF97316)
-val PetrolBlue = Color(0xFF2563EB)
-val EcoGreen = Color(0xFF16A34A)
-val CostPurple = Color(0xFF7C3AED)
+// Ngôn ngữ thiết kế Mazda KODO Cockpit & High-Contrast Outdoor Readability
+val FuelOrange = Color(0xFFD9381E) // Mazda Soul Red / Sporty Amber-Red có độ tương phản cao dưới nắng
+val PetrolBlue = Color(0xFF0284C7) // Cockpit Digital Blue sắc nét
+val EcoGreen = Color(0xFF15803D)   // SkyActiv Eco Emerald Green
+val CostPurple = Color(0xFF6D28D9) // Deep Royal Purple
+val CockpitDark = Color(0xFF0F172A) // Carbon Slate Táp-lô Mazda Connect
 
 private val LightColors = lightColorScheme(
     primary = FuelOrange,
     onPrimary = Color.White,
-    primaryContainer = Color(0xFFFFEDD5),
-    onPrimaryContainer = Color(0xFF9A3412),
+    primaryContainer = Color(0xFFFFE4E6),
+    onPrimaryContainer = Color(0xFF881337),
     secondary = PetrolBlue,
     onSecondary = Color.White,
-    secondaryContainer = Color(0xFFDBEAFE),
-    onSecondaryContainer = Color(0xFF1E40AF),
-    background = Color(0xFFF8FAFC),
+    secondaryContainer = Color(0xFFE0F2FE),
+    onSecondaryContainer = Color(0xFF075985),
+    background = Color(0xFFF1F5F9),
     surface = Color.White,
-    surfaceVariant = Color(0xFFF1F5F9),
+    surfaceVariant = Color(0xFFE2E8F0),
     onSurface = Color(0xFF0F172A),
-    onSurfaceVariant = Color(0xFF475569)
+    onSurfaceVariant = Color(0xFF334155)
 )
 
 private val DarkColors = darkColorScheme(

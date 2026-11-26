@@ -38,6 +38,8 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.Checkbox
+import androidx.compose.material3.CheckboxDefaults
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
@@ -62,6 +64,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -712,8 +715,12 @@ private fun InjectorCleanerTrackerCard(
 
 @Composable
 private fun GoldenFormulaSummaryCard() {
+    var expanded by remember { mutableStateOf(false) }
+
     Card(
-        modifier = Modifier.fillMaxWidth(),
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable { expanded = !expanded },
         shape = RoundedCornerShape(16.dp),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
         elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
@@ -723,43 +730,59 @@ private fun GoldenFormulaSummaryCard() {
             verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
             Row(
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(6.dp)
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
             ) {
-                Icon(
-                    imageVector = Icons.Default.Verified,
-                    contentDescription = null,
-                    tint = PetrolBlue,
-                    modifier = Modifier.size(18.dp)
-                )
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(6.dp),
+                    modifier = Modifier.weight(1f)
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Verified,
+                        contentDescription = null,
+                        tint = PetrolBlue,
+                        modifier = Modifier.size(18.dp)
+                    )
+                    Text(
+                        text = "QUY TẮC VÀNG: CHUẨN HÃNG & TIẾT KIỆM",
+                        fontWeight = FontWeight.Black,
+                        fontSize = 13.sp
+                    )
+                }
                 Text(
-                    text = "QUY TẮC VÀNG: CHUẨN HÃNG & TIẾT KIỆM NHẤT",
-                    fontWeight = FontWeight.Black,
-                    fontSize = 13.sp
+                    text = if (expanded) "Thu gọn ▴" else "Xem quy tắc ▾",
+                    fontSize = 11.sp,
+                    fontWeight = FontWeight.ExtraBold,
+                    color = PetrolBlue
                 )
             }
 
-            Text(
-                text = "• Cứ mỗi 5.000 km (Mốc 2, 4, 6, 8...): Chỉ thay Nhớt máy Mazda 0W-20 (3.6 Lít) + Long-đền ốc xả (15k) + Xịt bụi lọc gió (0đ). Chưa thay lọc nhớt! (~795k)",
-                fontSize = 12.sp,
-                color = MaterialTheme.colorScheme.onSurface
-            )
-            Text(
-                text = "• Cứ mỗi 10.000 km (Mốc 3, 5, 7...): Thay Nhớt 0W-20 (3.8 Lít) + Thay Lọc nhớt chính hãng (PE01-14-302A - 165k) + Đảo lốp 4 bánh + Tự đổ 1 chai súc béc GDI Techron (~190k).",
-                fontSize = 12.sp,
-                color = MaterialTheme.colorScheme.onSurface
-            )
-            Text(
-                text = "• Cứ mỗi 20.000 km (Mốc 5, 9...): Thay mới Lọc gió động cơ & Lọc gió điều hòa + Vệ sinh bảo dưỡng phanh 4 bánh.",
-                fontSize = 12.sp,
-                color = MaterialTheme.colorScheme.onSurface
-            )
-            Text(
-                text = "• Tuyệt đối KHÔNG thay sớm: Nước làm mát FL22 và Dầu hộp số 6AT ATF-FZ có tuổi thọ chuẩn 100.000 km (5 năm)!",
-                fontSize = 12.sp,
-                fontWeight = FontWeight.Bold,
-                color = EcoGreen
-            )
+            if (expanded) {
+                HorizontalDivider(color = MaterialTheme.colorScheme.surfaceVariant)
+                Text(
+                    text = "• Cứ mỗi 5.000 km (Mốc 2, 4, 6, 8...): Chỉ thay Nhớt máy Mazda 0W-20 (3.6 Lít) + Long-đền ốc xả (15k) + Xịt bụi lọc gió (0đ). Chưa thay lọc nhớt! (~795k)",
+                    fontSize = 12.sp,
+                    color = MaterialTheme.colorScheme.onSurface
+                )
+                Text(
+                    text = "• Cứ mỗi 10.000 km (Mốc 3, 5, 7...): Thay Nhớt 0W-20 (3.8 Lít) + Thay Lọc nhớt chính hãng (PE01-14-302A - 165k) + Đảo lốp 4 bánh + Tự đổ 1 chai súc béc GDI Techron (~190k).",
+                    fontSize = 12.sp,
+                    color = MaterialTheme.colorScheme.onSurface
+                )
+                Text(
+                    text = "• Cứ mỗi 20.000 km (Mốc 5, 9...): Thay mới Lọc gió động cơ & Lọc gió điều hòa + Vệ sinh bảo dưỡng phanh 4 bánh.",
+                    fontSize = 12.sp,
+                    color = MaterialTheme.colorScheme.onSurface
+                )
+                Text(
+                    text = "• Tuyệt đối KHÔNG thay sớm: Nước làm mát FL22 và Dầu hộp số 6AT ATF-FZ có tuổi thọ chuẩn 100.000 km (5 năm)!",
+                    fontSize = 12.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = EcoGreen
+                )
+            }
         }
     }
 }
@@ -771,7 +794,18 @@ private fun MilestoneDetailCard(
     copiedToast: Boolean,
     onCopyScript: (String) -> Unit
 ) {
-    val savedAmount = (plan.dealerInflatedVnd - plan.standardTotalVnd).coerceAtLeast(0)
+    // Checklist tương tác trực tiếp tại xưởng: Mặc định tích chọn tất cả hạng mục chuẩn và bỏ chọn tất cả hạng mục vẽ thêm
+    var checkedMustDo by remember(plan.stepIndex) {
+        mutableStateOf(plan.mustDoItems.indices.toSet())
+    }
+    var checkedSkip by remember(plan.stepIndex) {
+        mutableStateOf(emptySet<Int>())
+    }
+
+    val liveSelectedBillVnd = plan.mustDoItems.filterIndexed { idx, _ -> idx in checkedMustDo }.sumOf { it.costVnd } +
+        plan.skipItems.filterIndexed { idx, _ -> idx in checkedSkip }.sumOf { it.costVnd }
+
+    val liveSavedVnd = plan.skipItems.filterIndexed { idx, _ -> idx !in checkedSkip }.sumOf { it.costVnd }
 
     Card(
         modifier = Modifier.fillMaxWidth(),
@@ -847,14 +881,14 @@ private fun MilestoneDetailCard(
                 }
             }
 
-            // Phần 1: BẮT BUỘC LÀM & LOẠI PHỤ TÙNG CHUẨN NHẤT
+            // Phần 1: CHECKLIST TƯƠNG TÁC — NÊN BẢO DƯỠNG GÌ • THAY LOẠI NÀO CHUẨN NHẤT
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
                     .background(EcoGreen.copy(alpha = 0.06f), RoundedCornerShape(12.dp))
                     .border(1.dp, EcoGreen.copy(alpha = 0.25f), RoundedCornerShape(12.dp))
                     .padding(12.dp),
-                verticalArrangement = Arrangement.spacedBy(10.dp)
+                verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
@@ -867,24 +901,42 @@ private fun MilestoneDetailCard(
                         modifier = Modifier.size(18.dp)
                     )
                     Text(
-                        text = "NÊN BẢO DƯỠNG GÌ • THAY LOẠI NÀO CHUẨN NHẤT",
-                        fontSize = 12.sp,
+                        text = "CHECKLIST HẠNG MỤC CHUẨN (CHẠM TÍCH TÍNH TIỀN)",
+                        fontSize = 11.sp,
                         fontWeight = FontWeight.Black,
                         color = EcoGreen
                     )
                 }
 
-                plan.mustDoItems.forEach { item ->
+                plan.mustDoItems.forEachIndexed { idx, item ->
+                    val isChecked = idx in checkedMustDo
                     Row(
-                        modifier = Modifier.fillMaxWidth(),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clip(RoundedCornerShape(8.dp))
+                            .clickable {
+                                checkedMustDo = if (isChecked) checkedMustDo - idx else checkedMustDo + idx
+                            }
+                            .padding(vertical = 4.dp),
                         horizontalArrangement = Arrangement.SpaceBetween,
                         verticalAlignment = Alignment.Top
                     ) {
+                        Checkbox(
+                            checked = isChecked,
+                            onCheckedChange = { checked ->
+                                checkedMustDo = if (checked) checkedMustDo + idx else checkedMustDo - idx
+                            },
+                            colors = CheckboxDefaults.colors(checkedColor = EcoGreen),
+                            modifier = Modifier.size(22.dp)
+                        )
+                        Spacer(Modifier.width(8.dp))
                         Column(modifier = Modifier.weight(1f)) {
                             Text(
-                                text = "• ${item.name}",
+                                text = item.name,
                                 fontSize = 13.sp,
-                                fontWeight = FontWeight.Bold
+                                fontWeight = FontWeight.Bold,
+                                textDecoration = if (isChecked) TextDecoration.None else TextDecoration.LineThrough,
+                                color = if (isChecked) MaterialTheme.colorScheme.onSurface else MaterialTheme.colorScheme.onSurfaceVariant
                             )
                             Text(
                                 text = item.specAndType,
@@ -897,7 +949,7 @@ private fun MilestoneDetailCard(
                             text = if (item.costVnd == 0) "0 đ" else FormatUtils.formatVnd(item.costVnd.toDouble()),
                             fontSize = 13.sp,
                             fontWeight = FontWeight.ExtraBold,
-                            color = EcoGreen
+                            color = if (isChecked) EcoGreen else MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }
                 }
@@ -906,16 +958,24 @@ private fun MilestoneDetailCard(
 
                 Row(
                     modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
+                    Column {
+                        Text(
+                            text = "TỔNG HÓA ĐƠN THEO MỤC ĐÃ TÍCH:",
+                            fontSize = 12.sp,
+                            fontWeight = FontWeight.ExtraBold
+                        )
+                        Text(
+                            text = "Đã chọn ${checkedMustDo.size + checkedSkip.size} hạng mục",
+                            fontSize = 10.sp,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
                     Text(
-                        text = "TỔNG CHI PHÍ CHUẨN:",
-                        fontSize = 13.sp,
-                        fontWeight = FontWeight.ExtraBold
-                    )
-                    Text(
-                        text = FormatUtils.formatVnd(plan.standardTotalVnd.toDouble()),
-                        fontSize = 16.sp,
+                        text = FormatUtils.formatVnd(liveSelectedBillVnd.toDouble()),
+                        fontSize = 18.sp,
                         fontWeight = FontWeight.Black,
                         color = EcoGreen
                     )
@@ -944,7 +1004,7 @@ private fun MilestoneDetailCard(
                 }
             }
 
-            // Phần 3: HẠNG MỤC HÃNG HAY VẼ THÊM — CẦN GẠCH BỎ
+            // Phần 3: HẠNG MỤC HÃNG HAY VẼ THÊM — BỎ TÍCH ĐỂ TIẾT KIỆM
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -964,24 +1024,41 @@ private fun MilestoneDetailCard(
                         modifier = Modifier.size(18.dp)
                     )
                     Text(
-                        text = "HÃNG HAY VẼ THÊM — GẠCH BỎ ĐỂ TIẾT KIỆM ${FormatUtils.formatVnd(savedAmount.toDouble())}",
+                        text = "HÃNG HAY VẼ THÊM — ĐANG TIẾT KIỆM ${FormatUtils.formatVnd(liveSavedVnd.toDouble())}",
                         fontSize = 11.sp,
                         fontWeight = FontWeight.Black,
                         color = Color(0xFFDC2626)
                     )
                 }
 
-                plan.skipItems.forEach { skip ->
+                plan.skipItems.forEachIndexed { idx, skip ->
+                    val isAddedToBill = idx in checkedSkip
                     Row(
-                        modifier = Modifier.fillMaxWidth(),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clip(RoundedCornerShape(8.dp))
+                            .clickable {
+                                checkedSkip = if (isAddedToBill) checkedSkip - idx else checkedSkip + idx
+                            }
+                            .padding(vertical = 4.dp),
                         horizontalArrangement = Arrangement.SpaceBetween,
                         verticalAlignment = Alignment.Top
                     ) {
+                        Checkbox(
+                            checked = isAddedToBill,
+                            onCheckedChange = { checked ->
+                                checkedSkip = if (checked) checkedSkip + idx else checkedSkip - idx
+                            },
+                            colors = CheckboxDefaults.colors(checkedColor = Color(0xFFDC2626)),
+                            modifier = Modifier.size(22.dp)
+                        )
+                        Spacer(Modifier.width(8.dp))
                         Column(modifier = Modifier.weight(1f)) {
                             Text(
-                                text = "✕ ${skip.name}",
+                                text = if (isAddedToBill) "⚠ ${skip.name} (Đã cộng vào bill)" else "✕ ${skip.name} (Đã gạch bỏ)",
                                 fontSize = 13.sp,
                                 fontWeight = FontWeight.Bold,
+                                textDecoration = if (isAddedToBill) TextDecoration.None else TextDecoration.LineThrough,
                                 color = Color(0xFFDC2626)
                             )
                             Text(
@@ -992,7 +1069,7 @@ private fun MilestoneDetailCard(
                         }
                         Spacer(Modifier.width(8.dp))
                         Text(
-                            text = "-${FormatUtils.formatVnd(skip.costVnd.toDouble())}",
+                            text = if (isAddedToBill) "+${FormatUtils.formatVnd(skip.costVnd.toDouble())}" else "-${FormatUtils.formatVnd(skip.costVnd.toDouble())}",
                             fontSize = 12.sp,
                             fontWeight = FontWeight.Bold,
                             color = Color(0xFFDC2626)
@@ -1046,6 +1123,7 @@ private fun MilestoneDetailCard(
 
 @Composable
 private fun PartsCheatSheetCard() {
+    var expanded by remember { mutableStateOf(false) }
     val specs = remember {
         listOf(
             PartSpecReference(
@@ -1088,7 +1166,9 @@ private fun PartsCheatSheetCard() {
     }
 
     Card(
-        modifier = Modifier.fillMaxWidth(),
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable { expanded = !expanded },
         shape = RoundedCornerShape(16.dp),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
         elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
@@ -1098,50 +1178,66 @@ private fun PartsCheatSheetCard() {
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
             Row(
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(6.dp)
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
             ) {
-                Icon(
-                    imageVector = Icons.Default.Shield,
-                    contentDescription = null,
-                    tint = CostPurple,
-                    modifier = Modifier.size(18.dp)
-                )
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(6.dp),
+                    modifier = Modifier.weight(1f)
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Shield,
+                        contentDescription = null,
+                        tint = CostPurple,
+                        modifier = Modifier.size(18.dp)
+                    )
+                    Text(
+                        text = "CẨM NANG LOẠI NHỚT & PHỤ TÙNG MAZDA 2",
+                        fontWeight = FontWeight.Black,
+                        fontSize = 13.sp
+                    )
+                }
                 Text(
-                    text = "CẨM NANG LOẠI NHỚT & PHỤ TÙNG CHUẨN MAZDA 2",
-                    fontWeight = FontWeight.Black,
-                    fontSize = 13.sp
+                    text = if (expanded) "Thu gọn ▴" else "Mở xem (6 mục) ▾",
+                    fontSize = 11.sp,
+                    fontWeight = FontWeight.ExtraBold,
+                    color = CostPurple
                 )
             }
 
-            specs.forEachIndexed { idx, sp ->
-                Column(verticalArrangement = Arrangement.spacedBy(3.dp)) {
-                    Text(
-                        text = sp.name,
-                        fontWeight = FontWeight.ExtraBold,
-                        fontSize = 13.sp,
-                        color = MaterialTheme.colorScheme.onSurface
-                    )
-                    Text(
-                        text = "Loại chuẩn: ${sp.recommendedType}",
-                        fontSize = 12.sp,
-                        fontWeight = FontWeight.SemiBold,
-                        color = PetrolBlue
-                    )
-                    Text(
-                        text = "Chu kỳ: ${sp.replaceCycle}",
-                        fontSize = 11.sp,
-                        color = EcoGreen,
-                        fontWeight = FontWeight.Bold
-                    )
-                    Text(
-                        text = "💡 ${sp.smartTip}",
-                        fontSize = 11.sp,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                }
-                if (idx < specs.lastIndex) {
-                    HorizontalDivider(color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.6f))
+            if (expanded) {
+                HorizontalDivider(color = MaterialTheme.colorScheme.surfaceVariant)
+                specs.forEachIndexed { idx, sp ->
+                    Column(verticalArrangement = Arrangement.spacedBy(3.dp)) {
+                        Text(
+                            text = sp.name,
+                            fontWeight = FontWeight.ExtraBold,
+                            fontSize = 13.sp,
+                            color = MaterialTheme.colorScheme.onSurface
+                        )
+                        Text(
+                            text = "Loại chuẩn: ${sp.recommendedType}",
+                            fontSize = 12.sp,
+                            fontWeight = FontWeight.SemiBold,
+                            color = PetrolBlue
+                        )
+                        Text(
+                            text = "Chu kỳ: ${sp.replaceCycle}",
+                            fontSize = 11.sp,
+                            color = EcoGreen,
+                            fontWeight = FontWeight.Bold
+                        )
+                        Text(
+                            text = "💡 ${sp.smartTip}",
+                            fontSize = 11.sp,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                    if (idx < specs.lastIndex) {
+                        HorizontalDivider(color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.6f))
+                    }
                 }
             }
         }
@@ -1182,6 +1278,7 @@ private fun UpdateMaintenanceOdoDialog(
                     value = lastOdoText,
                     onValueChange = { lastOdoText = it.filter { ch -> ch.isDigit() } },
                     label = { Text("ODO lúc bảo dưỡng gần nhất (km)") },
+                    visualTransformation = remember { ThousandSeparatorTransformation() },
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                     singleLine = true
                 )
@@ -1190,6 +1287,7 @@ private fun UpdateMaintenanceOdoDialog(
                     value = currentOdoText,
                     onValueChange = { currentOdoText = it.filter { ch -> ch.isDigit() } },
                     label = { Text("ODO hiện tại trên xe (km)") },
+                    visualTransformation = remember { ThousandSeparatorTransformation() },
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                     singleLine = true
                 )
@@ -1272,6 +1370,7 @@ private fun UpdateInjectorCleanerOdoDialog(
                     value = lastOdoText,
                     onValueChange = { lastOdoText = it.filter { ch -> ch.isDigit() } },
                     label = { Text("ODO lúc đổ dung dịch gần nhất (0 = chưa đổ)") },
+                    visualTransformation = remember { ThousandSeparatorTransformation() },
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                     singleLine = true
                 )
@@ -1298,6 +1397,7 @@ private fun UpdateInjectorCleanerOdoDialog(
                     value = currentOdoText,
                     onValueChange = { currentOdoText = it.filter { ch -> ch.isDigit() } },
                     label = { Text("ODO hiện tại trên xe (km)") },
+                    visualTransformation = remember { ThousandSeparatorTransformation() },
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                     singleLine = true
                 )
