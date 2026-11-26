@@ -122,6 +122,7 @@ fun MaintenanceGuideTabContent(
 
     var selectedPlanIdx by remember(suggestedPlanIndex) { mutableIntStateOf(suggestedPlanIndex) }
     var showUpdateOdoDialog by remember { mutableStateOf(false) }
+    var showUpdateInjectorDialog by remember { mutableStateOf(false) }
     var copiedScriptToast by remember { mutableStateOf(false) }
 
     val activePlan = allPlans.getOrElse(selectedPlanIdx) { allPlans[1] }
@@ -147,6 +148,14 @@ fun MaintenanceGuideTabContent(
                 estDaysRemaining = estDaysRemaining,
                 progressRatio = progressRatio,
                 onMarkCompletedClick = { showUpdateOdoDialog = true }
+            )
+        }
+
+        // 1B. Thẻ Theo Dõi Thời Điểm & Số KM Đổ Dung Dịch Vệ Sinh Kim Phun Xăng GDI
+        item {
+            InjectorCleanerTrackerCard(
+                profile = profile,
+                onUpdateInjectorOdoClick = { showUpdateInjectorDialog = true }
             )
         }
 
@@ -225,6 +234,23 @@ fun MaintenanceGuideTabContent(
             }
         )
     }
+
+    if (showUpdateInjectorDialog) {
+        UpdateInjectorCleanerOdoDialog(
+            profile = profile,
+            onDismiss = { showUpdateInjectorDialog = false },
+            onSave = { newLastInjectorOdo, newIntervalKm, newCurrentOdo ->
+                onUpdateProfile(
+                    profile.copy(
+                        lastInjectorCleanerOdo = newLastInjectorOdo,
+                        injectorCleanerIntervalKm = newIntervalKm,
+                        currentOdo = maxOf(profile.currentOdo, newCurrentOdo)
+                    )
+                )
+                showUpdateInjectorDialog = false
+            }
+        )
+    }
 }
 
 @Composable
@@ -233,7 +259,7 @@ fun HomeMaintenanceReminderBanner(
     onOpenMaintenanceTab: () -> Unit
 ) {
     val kmRemaining = profile.kmUntilNextMaintenance
-    val isUrgent = kmRemaining <= 500
+    val isUrgent = kmRemaining <= 500 || profile.isInjectorCleanerDueSoon
     val estDays = ceil(kmRemaining.toDouble() / profile.dailyKm.coerceAtLeast(1).toDouble()).toInt()
 
     Card(
@@ -291,10 +317,16 @@ fun HomeMaintenanceReminderBanner(
                         )
                     }
                     Text(
-                        text = "Mốc kế: ${FormatUtils.formatVndNumberOnly(profile.nextMaintenanceOdo.toDouble())} km (Còn ${FormatUtils.formatVndNumberOnly(kmRemaining.toDouble())} km • ~$estDays ngày)",
+                        text = "Bảo dưỡng kế: ${FormatUtils.formatVndNumberOnly(profile.nextMaintenanceOdo.toDouble())} km (Còn ${FormatUtils.formatVndNumberOnly(kmRemaining.toDouble())} km • ~$estDays ngày)",
                         fontSize = 12.sp,
                         fontWeight = FontWeight.Bold,
                         color = MaterialTheme.colorScheme.onSurface
+                    )
+                    Text(
+                        text = "💧 Đổ vệ sinh kim phun: mốc ${FormatUtils.formatVndNumberOnly(profile.nextInjectorCleanerOdo.toDouble())} km (Còn ${FormatUtils.formatVndNumberOnly(profile.kmUntilNextInjectorCleaner.toDouble())} km)",
+                        fontSize = 11.sp,
+                        fontWeight = FontWeight.SemiBold,
+                        color = PetrolBlue
                     )
                 }
             }
@@ -466,6 +498,212 @@ private fun NextMaintenanceCountdownCard(
                 Text(
                     text = "Cập Nhật Mốc Đã Bảo Dưỡng",
                     fontWeight = FontWeight.Bold
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun InjectorCleanerTrackerCard(
+    profile: CarProfile,
+    onUpdateInjectorOdoClick: () -> Unit
+) {
+    val nextInjectorOdo = profile.nextInjectorCleanerOdo
+    val kmRemaining = profile.kmUntilNextInjectorCleaner
+    val estDays = ceil(kmRemaining.toDouble() / profile.dailyKm.coerceAtLeast(1).toDouble()).toInt()
+    val kmDrivenSinceLast = (profile.currentOdo - profile.lastInjectorCleanerOdo).coerceAtLeast(0)
+    val progressRatio = (kmDrivenSinceLast.toFloat() / profile.injectorCleanerIntervalKm.coerceAtLeast(1).toFloat())
+        .coerceIn(0f, 1f)
+    val isDueSoon = profile.isInjectorCleanerDueSoon
+
+    val standardMilestones = listOf(10_000, 20_000, 30_000, 40_000, 50_000, 60_000)
+
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(16.dp),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .border(
+                    width = 1.5.dp,
+                    color = if (isDueSoon) FuelOrange else PetrolBlue.copy(alpha = 0.35f),
+                    shape = RoundedCornerShape(16.dp)
+                )
+                .padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Surface(
+                    color = PetrolBlue.copy(alpha = 0.14f),
+                    shape = RoundedCornerShape(6.dp)
+                ) {
+                    Text(
+                        text = "💧 VỆ SINH KIM PHUN XĂNG GDI (CHU KỲ ${FormatUtils.formatVndNumberOnly(profile.injectorCleanerIntervalKm.toDouble())} KM)",
+                        color = PetrolBlue,
+                        fontSize = 10.sp,
+                        fontWeight = FontWeight.Black,
+                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
+                    )
+                }
+
+                Text(
+                    text = if (profile.lastInjectorCleanerOdo <= 0) "Chưa đổ lần nào" else "Đã đổ ở ${FormatUtils.formatVndNumberOnly(profile.lastInjectorCleanerOdo.toDouble())} km",
+                    fontSize = 11.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = if (profile.lastInjectorCleanerOdo <= 0) MaterialTheme.colorScheme.onSurfaceVariant else EcoGreen
+                )
+            }
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.Bottom
+            ) {
+                Column {
+                    Text(
+                        text = "THỜI ĐIỂM ĐỔ CHAI TIẾP THEO",
+                        fontSize = 10.sp,
+                        fontWeight = FontWeight.ExtraBold,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                    Text(
+                        text = "ODO ${FormatUtils.formatVndNumberOnly(nextInjectorOdo.toDouble())} km",
+                        fontSize = 24.sp,
+                        fontWeight = FontWeight.Black,
+                        color = PetrolBlue
+                    )
+                    Text(
+                        text = "Còn ${FormatUtils.formatVndNumberOnly(kmRemaining.toDouble())} km nữa (~$estDays ngày)",
+                        fontSize = 12.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = if (isDueSoon) Color(0xFFDC2626) else MaterialTheme.colorScheme.onSurface
+                    )
+                }
+
+                Column(horizontalAlignment = Alignment.End) {
+                    Text(
+                        text = "CHI PHÍ TỰ ĐỔ CHUẨN",
+                        fontSize = 10.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                    Text(
+                        text = "~190.000 đ / chai",
+                        fontSize = 16.sp,
+                        fontWeight = FontWeight.Black,
+                        color = EcoGreen
+                    )
+                    Text(
+                        text = "Rẻ hơn hãng súc béc 450k",
+                        fontSize = 11.sp,
+                        fontWeight = FontWeight.SemiBold,
+                        color = EcoGreen
+                    )
+                }
+            }
+
+            LinearProgressIndicator(
+                progress = { progressRatio },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(8.dp)
+                    .clip(RoundedCornerShape(4.dp)),
+                color = if (isDueSoon) FuelOrange else PetrolBlue,
+                trackColor = PetrolBlue.copy(alpha = 0.15f)
+            )
+
+            // Dãy các mốc số km chuẩn để đổ dung dịch vệ sinh kim phun
+            Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                Text(
+                    text = "CÁC MỐC SỐ KM ĐỔ ĐỊNH KỲ CHUẨN (MỖI 10.000 KM / 2 LẦN THAY NHỚT):",
+                    fontSize = 11.sp,
+                    fontWeight = FontWeight.ExtraBold,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .horizontalScroll(rememberScrollState()),
+                    horizontalArrangement = Arrangement.spacedBy(6.dp)
+                ) {
+                    standardMilestones.forEach { kmMark ->
+                        val isDone = profile.lastInjectorCleanerOdo >= kmMark
+                        val isNextTarget = nextInjectorOdo == kmMark
+                        Surface(
+                            color = when {
+                                isDone -> EcoGreen.copy(alpha = 0.15f)
+                                isNextTarget -> PetrolBlue.copy(alpha = 0.16f)
+                                else -> MaterialTheme.colorScheme.surfaceVariant
+                            },
+                            shape = RoundedCornerShape(8.dp)
+                        ) {
+                            Text(
+                                text = when {
+                                    isDone -> "✓ ${kmMark / 1000}.000 km"
+                                    isNextTarget -> "🎯 ${kmMark / 1000}.000 km (Sắp tới)"
+                                    else -> "${kmMark / 1000}.000 km"
+                                },
+                                fontSize = 11.sp,
+                                fontWeight = if (isDone || isNextTarget) FontWeight.ExtraBold else FontWeight.Medium,
+                                color = when {
+                                    isDone -> EcoGreen
+                                    isNextTarget -> PetrolBlue
+                                    else -> MaterialTheme.colorScheme.onSurfaceVariant
+                                },
+                                modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp)
+                            )
+                        }
+                    }
+                }
+            }
+
+            // Hướng dẫn loại dung dịch chuẩn & thời điểm đổ vào bình xăng
+            Surface(
+                color = PetrolBlue.copy(alpha = 0.07f),
+                shape = RoundedCornerShape(10.dp),
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Column(
+                    modifier = Modifier.padding(12.dp),
+                    verticalArrangement = Arrangement.spacedBy(4.dp)
+                ) {
+                    Text(
+                        text = "💡 LOẠI CHUẨN & CÁCH ĐỔ ĐÚNG KỸ THUẬT:",
+                        fontSize = 11.sp,
+                        fontWeight = FontWeight.Black,
+                        color = PetrolBlue
+                    )
+                    Text(
+                        text = "• Loại dùng chuẩn cho Mazda 2 SkyActiv-G (tỷ số nén 13:1): Chai Mazda Deposit Cleaner chính hãng hoặc Chevron Techron Concentrate Plus (355ml).",
+                        fontSize = 12.sp,
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
+                    Text(
+                        text = "• Thời điểm đổ tốt nhất: Khi bình xăng gần cạn (còn ~1 vạch / chuẩn bị vào cây xăng) → Đổ hết 1 chai dung dịch vào bình xăng trước → Bơm đầy bình xăng RON 95 (~35 Lít) để áp lực xăng hòa trộn đều dung dịch. Chạy hết bình xăng đó là sạch bóng muội carbon đầu kim phun GDI!",
+                        fontSize = 12.sp,
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
+                }
+            }
+
+            OutlinedButton(
+                onClick = onUpdateInjectorOdoClick,
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Icon(Icons.Default.Edit, contentDescription = null, modifier = Modifier.size(16.dp))
+                Spacer(Modifier.width(6.dp))
+                Text(
+                    text = "Ghi Nhận Đã Đổ / Chỉnh Mốc KM Vệ Sinh Kim Phun",
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 12.sp
                 )
             }
         }
@@ -974,6 +1212,116 @@ private fun UpdateMaintenanceOdoDialog(
                 }
             ) {
                 Text("Lưu cập nhật")
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text("Hủy")
+            }
+        }
+    )
+}
+
+@Composable
+private fun UpdateInjectorCleanerOdoDialog(
+    profile: CarProfile,
+    onDismiss: () -> Unit,
+    onSave: (lastInjectorOdo: Int, intervalKm: Int, currentOdo: Int) -> Unit
+) {
+    var lastOdoText by remember {
+        val suggested = if (profile.lastInjectorCleanerOdo > 0) profile.nextInjectorCleanerOdo else profile.currentOdo
+        mutableStateOf(suggested.toString())
+    }
+    var intervalKm by remember { mutableIntStateOf(profile.injectorCleanerIntervalKm) }
+    var currentOdoText by remember {
+        mutableStateOf(profile.currentOdo.toString())
+    }
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text("Cập Nhật Mốc Đổ Vệ Sinh Kim Phun", fontWeight = FontWeight.Bold) },
+        text = {
+            Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                Text(
+                    text = "Chọn số ODO lúc bạn vừa đổ 1 chai dung dịch vệ sinh kim phun (Mazda Deposit Cleaner / Techron) vào bình xăng:",
+                    fontSize = 12.sp,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .horizontalScroll(rememberScrollState()),
+                    horizontalArrangement = Arrangement.spacedBy(6.dp)
+                ) {
+                    FilterChip(
+                        selected = lastOdoText == "0",
+                        onClick = { lastOdoText = "0" },
+                        label = { Text("Chưa đổ (0 km)", fontSize = 11.sp) }
+                    )
+                    listOf(5000, 10000, 15000, 20000, 30000, 40000).forEach { preset ->
+                        FilterChip(
+                            selected = lastOdoText == preset.toString(),
+                            onClick = { lastOdoText = preset.toString() },
+                            label = { Text("${preset / 1000}k km", fontSize = 11.sp) }
+                        )
+                    }
+                }
+
+                OutlinedTextField(
+                    value = lastOdoText,
+                    onValueChange = { lastOdoText = it.filter { ch -> ch.isDigit() } },
+                    label = { Text("ODO lúc đổ dung dịch gần nhất (0 = chưa đổ)") },
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                    singleLine = true
+                )
+
+                Text(
+                    text = "Chu kỳ nhắc đổ tiếp theo:",
+                    fontSize = 12.sp,
+                    fontWeight = FontWeight.SemiBold
+                )
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    FilterChip(
+                        selected = intervalKm == 10000,
+                        onClick = { intervalKm = 10000 },
+                        label = { Text("+10.000 km (Chuẩn hãng)", fontSize = 11.sp) }
+                    )
+                    FilterChip(
+                        selected = intervalKm == 5000,
+                        onClick = { intervalKm = 5000 },
+                        label = { Text("+5.000 km (Đi phố nhiều)", fontSize = 11.sp) }
+                    )
+                }
+
+                OutlinedTextField(
+                    value = currentOdoText,
+                    onValueChange = { currentOdoText = it.filter { ch -> ch.isDigit() } },
+                    label = { Text("ODO hiện tại trên xe (km)") },
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                    singleLine = true
+                )
+
+                val parsedLast = lastOdoText.toIntOrNull() ?: 0
+                val previewNext = if (parsedLast <= 0) intervalKm else parsedLast + intervalKm
+                Text(
+                    text = "💧 Mốc đổ dung dịch tiếp theo sẽ là: ${FormatUtils.formatVndNumberOnly(previewNext.toDouble())} km",
+                    fontSize = 12.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = PetrolBlue
+                )
+            }
+        },
+        confirmButton = {
+            Button(
+                onClick = {
+                    val lastVal = lastOdoText.toIntOrNull() ?: 0
+                    val currVal = currentOdoText.toIntOrNull() ?: profile.currentOdo
+                    onSave(lastVal, intervalKm, maxOf(currVal, lastVal))
+                },
+                colors = ButtonDefaults.buttonColors(containerColor = PetrolBlue)
+            ) {
+                Text("Lưu mốc kim phun", fontWeight = FontWeight.Bold)
             }
         },
         dismissButton = {

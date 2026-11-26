@@ -59,6 +59,8 @@ class FuelRepository(private val context: Context, private val dao: FuelDao) {
             dailyKm = prefs.getInt("daily_km", 55),
             lastMaintenanceOdo = prefs.getInt("last_maintenance_odo", 1000),
             maintenanceIntervalKm = prefs.getInt("maintenance_interval_km", 5000),
+            lastInjectorCleanerOdo = prefs.getInt("last_injector_cleaner_odo", 0),
+            injectorCleanerIntervalKm = prefs.getInt("injector_cleaner_interval_km", 10000),
             favoriteStations = if (stations.isEmpty()) CarProfile.TOP_5_FUEL_BRANDS else stations
         )
     }
@@ -79,6 +81,8 @@ class FuelRepository(private val context: Context, private val dao: FuelDao) {
             .putInt("daily_km", profile.dailyKm)
             .putInt("last_maintenance_odo", profile.lastMaintenanceOdo)
             .putInt("maintenance_interval_km", profile.maintenanceIntervalKm)
+            .putInt("last_injector_cleaner_odo", profile.lastInjectorCleanerOdo)
+            .putInt("injector_cleaner_interval_km", profile.injectorCleanerIntervalKm)
             .putString("favorite_brands_v1", profile.favoriteStations.joinToString("|"))
             .apply()
     }
@@ -366,6 +370,10 @@ class FuelRepository(private val context: Context, private val dao: FuelDao) {
         profileObj.put("currentFuelPrice", profile.currentFuelPrice)
         profileObj.put("currentOdo", profile.currentOdo)
         profileObj.put("dailyKm", profile.dailyKm)
+        profileObj.put("lastMaintenanceOdo", profile.lastMaintenanceOdo)
+        profileObj.put("maintenanceIntervalKm", profile.maintenanceIntervalKm)
+        profileObj.put("lastInjectorCleanerOdo", profile.lastInjectorCleanerOdo)
+        profileObj.put("injectorCleanerIntervalKm", profile.injectorCleanerIntervalKm)
         root.put("profile", profileObj)
 
         val records = dao.getAllFuelRecords()
@@ -420,7 +428,11 @@ class FuelRepository(private val context: Context, private val dao: FuelDao) {
                 fuelType = profileObj.optString("fuelType", current.fuelType),
                 currentFuelPrice = profileObj.optDouble("currentFuelPrice", current.currentFuelPrice),
                 currentOdo = profileObj.optInt("currentOdo", current.currentOdo),
-                dailyKm = profileObj.optInt("dailyKm", current.dailyKm)
+                dailyKm = profileObj.optInt("dailyKm", current.dailyKm),
+                lastMaintenanceOdo = profileObj.optInt("lastMaintenanceOdo", current.lastMaintenanceOdo),
+                maintenanceIntervalKm = profileObj.optInt("maintenanceIntervalKm", current.maintenanceIntervalKm),
+                lastInjectorCleanerOdo = profileObj.optInt("lastInjectorCleanerOdo", current.lastInjectorCleanerOdo),
+                injectorCleanerIntervalKm = profileObj.optInt("injectorCleanerIntervalKm", current.injectorCleanerIntervalKm)
             )
             saveCarProfile(updated)
         }
