@@ -62,14 +62,19 @@ object FuelPriceFetcher {
      * của ngày điều chỉnh để phân biệt chính xác đổ xăng Trước 15h00 (giá cũ) và Sau 15h00 (giá mới).
      */
     internal fun extractEffectiveAt15hMillis(html: String): Long {
-        val dateRegex = Regex("(\\d{1,2})/(\\d{1,2})/(\\d{4})")
-        val match = dateRegex.find(html)
+        val headerNote = extractUpdateTimestampNote(html)
+        val dateRegex = Regex("(\\d{1,2})[/-](\\d{1,2})[/-](\\d{4})")
+        val match = dateRegex.find(headerNote) ?: dateRegex.find(html)
         val targetDate = if (match != null) {
             try {
                 val d = match.groupValues[1].toInt()
                 val m = match.groupValues[2].toInt()
                 val y = match.groupValues[3].toInt()
-                LocalDate.of(y, m, d)
+                if (y in 2020..2035 && m in 1..12 && d in 1..31) {
+                    LocalDate.of(y, m, d)
+                } else {
+                    LocalDate.now(VN_ZONE)
+                }
             } catch (_: Exception) {
                 LocalDate.now(VN_ZONE)
             }
@@ -168,9 +173,14 @@ object FuelPriceFetcher {
     }
 
     private fun parsePriceNumber(raw: String): Double? {
-        val digitsOnly = raw.replace(Regex("[^0-9]"), "")
-        if (digitsOnly.length in 4..6) {
-            return digitsOnly.toDoubleOrNull()
+        val cleaned = raw.trim()
+            .replace(Regex("[.,]00$"), "")
+            .replace(Regex("[^0-9]"), "")
+        if (cleaned.length in 4..6) {
+            val value = cleaned.toDoubleOrNull()
+            if (value != null && value in 10_000.0..60_000.0) {
+                return value
+            }
         }
         return null
     }

@@ -50,20 +50,23 @@ class FuelViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
-    fun refreshLiveFuelPrices() {
+    fun refreshLiveFuelPrices(onComplete: ((Boolean, String, Double) -> Unit)? = null) {
         if (_isSyncingPrice.value) return
         viewModelScope.launch {
             _isSyncingPrice.value = true
-            _syncStatusMessage.value = "Đang tự động cập nhật giá xăng Petrolimex..."
+            _syncStatusMessage.value = "Đang kết nối cập nhật giá xăng Petrolimex mới nhất..."
             val result = repo.syncLiveFuelPrices()
             _liveFuelItems.value = repo.getCachedLiveFuelItems()
             _profile.value = repo.getCarProfile()
-            _syncStatusMessage.value = if (result.success) {
-                "Đã tự động cập nhật • ${repo.getLastSyncNote()}"
+            val currentPrice = _profile.value.currentFuelPrice
+            val statusMsg = if (result.success) {
+                "Đã cập nhật • ${repo.getLastSyncNote()}"
             } else {
                 "Đang dùng giá lưu trong máy • (${result.errorMessage ?: "Offline"})"
             }
+            _syncStatusMessage.value = statusMsg
             _isSyncingPrice.value = false
+            onComplete?.invoke(result.success, statusMsg, currentPrice)
         }
     }
 
@@ -124,11 +127,15 @@ class FuelViewModel(application: Application) : AndroidViewModel(application) {
         priceZone1: Double,
         priceZone2: Double,
         effectiveEpochMillis: Long,
-        note: String
+        note: String,
+        onComplete: ((Double) -> Unit)? = null
     ) {
         viewModelScope.launch {
             repo.addManualPricePeriod(priceZone1, priceZone2, effectiveEpochMillis, note)
+            _liveFuelItems.value = repo.getCachedLiveFuelItems()
             _profile.value = repo.getCarProfile()
+            _syncStatusMessage.value = repo.getLastSyncNote()
+            onComplete?.invoke(_profile.value.currentFuelPrice)
         }
     }
 

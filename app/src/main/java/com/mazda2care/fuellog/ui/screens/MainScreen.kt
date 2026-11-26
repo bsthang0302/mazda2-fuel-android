@@ -80,7 +80,9 @@ import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
+import kotlinx.coroutines.launch
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -137,11 +139,25 @@ fun MainScreen(
     val liveItems by viewModel.liveFuelItems.collectAsState()
     val isSyncing by viewModel.isSyncingPrice.collectAsState()
     val syncStatus by viewModel.syncStatusMessage.collectAsState()
+    val coroutineScope = rememberCoroutineScope()
 
     var selectedTab by remember { mutableIntStateOf(0) }
     var showAddRefillSheet by remember { mutableStateOf(false) }
     var editingRecord by remember { mutableStateOf<FuelRecordEntity?>(null) }
     var showManualPriceDialog by remember { mutableStateOf(false) }
+
+    fun triggerProactiveOnlinePriceSync() {
+        viewModel.refreshLiveFuelPrices { success, _, updatedPrice ->
+            coroutineScope.launch {
+                val msg = if (success) {
+                    "✓ Đã cập nhật giá ${profile.selectedFuelProduct.shortName} (${profile.selectedPriceZone.shortLabel}): ${FormatUtils.formatVnd(updatedPrice)}/L"
+                } else {
+                    "Không kết nối được mạng • Bạn có thể bấm 'Nhập giá mới' để cập nhật thủ công"
+                }
+                snackbarHostState.showSnackbar(msg)
+            }
+        }
+    }
 
     Scaffold(
         snackbarHost = { SnackbarHost(snackbarHostState) },
@@ -164,20 +180,27 @@ fun MainScreen(
                     }
                 },
                 actions = {
-                    IconButton(
-                        onClick = { viewModel.refreshLiveFuelPrices() },
-                        enabled = !isSyncing
+                    OutlinedButton(
+                        onClick = { triggerProactiveOnlinePriceSync() },
+                        enabled = !isSyncing,
+                        contentPadding = PaddingValues(horizontal = 10.dp, vertical = 4.dp),
+                        modifier = Modifier.padding(end = 8.dp)
                     ) {
                         if (isSyncing) {
                             CircularProgressIndicator(
-                                modifier = Modifier.size(20.dp),
+                                modifier = Modifier.size(15.dp),
                                 strokeWidth = 2.dp
                             )
+                            Spacer(Modifier.width(6.dp))
+                            Text("Đang tải...", fontSize = 11.sp, fontWeight = FontWeight.Bold)
                         } else {
                             Icon(
                                 imageVector = Icons.Default.Refresh,
-                                contentDescription = "Cập nhật giá xăng tự động"
+                                contentDescription = "Cập nhật giá xăng chủ động",
+                                modifier = Modifier.size(15.dp)
                             )
+                            Spacer(Modifier.width(4.dp))
+                            Text("Cập nhật giá", fontSize = 11.sp, fontWeight = FontWeight.Bold)
                         }
                     }
                 },
@@ -247,7 +270,7 @@ fun MainScreen(
                     periods = periods,
                     isSyncing = isSyncing,
                     syncStatus = syncStatus,
-                    onRefreshPrice = { viewModel.refreshLiveFuelPrices() },
+                    onRefreshPrice = { triggerProactiveOnlinePriceSync() },
                     onOpenManualPrice = { showManualPriceDialog = true },
                     onSwitchZone = { newZone ->
                         viewModel.selectFuelProductAndZone(profile.selectedFuelProduct, newZone)
@@ -284,7 +307,7 @@ fun MainScreen(
                     records = records,
                     isSyncing = isSyncing,
                     syncStatus = syncStatus,
-                    onRefreshLive = { viewModel.refreshLiveFuelPrices() },
+                    onRefreshLive = { triggerProactiveOnlinePriceSync() },
                     onSelectFuelAndZone = { prod, zone ->
                         viewModel.selectFuelProductAndZone(prod, zone)
                     },
@@ -307,8 +330,17 @@ fun MainScreen(
             profile = profile,
             existingRecords = records,
             editingRecord = editingRecord,
+            isSyncingPrice = isSyncing,
             getPriceForDate = { millis -> viewModel.getPriceForDate(millis) },
             getMatchedPeriod = { millis -> viewModel.getMatchedPeriodForDate(millis) },
+            onRefreshOnlinePrice = { onUpdatedPrice ->
+                viewModel.refreshLiveFuelPrices { _, _, newPrice ->
+                    onUpdatedPrice(newPrice)
+                }
+            },
+            onOpenManualPriceDialog = {
+                showManualPriceDialog = true
+            },
             onDismiss = {
                 showAddRefillSheet = false
                 editingRecord = null
@@ -332,9 +364,28 @@ fun MainScreen(
     if (showManualPriceDialog) {
         ManualUpdatePriceDialog(
             currentPrice = profile.currentFuelPrice,
+            isSyncingOnline = isSyncing,
+            onFetchOnlinePrice = { onFetched ->
+                viewModel.refreshLiveFuelPrices { success, _, _ ->
+                    if (success) {
+                        val item = viewModel.liveFuelItems.value.firstOrNull {
+                            it.product == profile.selectedFuelProduct
+                        }
+                        if (item != null) {
+                            onFetched(item.priceZone1, item.priceZone2)
+                        }
+                    }
+                }
+            },
             onDismiss = { showManualPriceDialog = false },
             onConfirm = { zone1, zone2, effectiveEpochMillis, note ->
-                viewModel.updateManualPrice(zone1, zone2, effectiveEpochMillis, note)
+                viewModel.updateManualPrice(zone1, zone2, effectiveEpochMillis, note) { savedActivePrice ->
+                    coroutineScope.launch {
+                        snackbarHostState.showSnackbar(
+                            "✓ Đã cập nhật giá xăng chủ động: ${FormatUtils.formatVnd(savedActivePrice)}/L"
+                        )
+                    }
+                }
                 showManualPriceDialog = false
             }
         )
@@ -677,16 +728,53 @@ private fun RealtimePriceBannerCard(
                         )
                     }
                 }
+            }
 
-                Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                    OutlinedButton(
-                        onClick = onOpenManualPrice,
-                        contentPadding = PaddingValues(horizontal = 10.dp, vertical = 6.dp)
-                    ) {
-                        Icon(Icons.Default.Edit, contentDescription = null, modifier = Modifier.size(15.dp))
-                        Spacer(Modifier.width(4.dp))
-                        Text("Thêm kỳ giá", fontSize = 12.sp)
+            Spacer(Modifier.height(12.dp))
+
+            // Cụm 2 nút Cập Nhật Giá Xăng Chủ Động (Tự động Online & Tự nhập thủ công)
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                Button(
+                    onClick = onRefreshPrice,
+                    enabled = !isSyncing,
+                    modifier = Modifier.weight(1.15f),
+                    colors = ButtonDefaults.buttonColors(containerColor = PetrolBlue),
+                    contentPadding = PaddingValues(horizontal = 10.dp, vertical = 8.dp)
+                ) {
+                    if (isSyncing) {
+                        CircularProgressIndicator(
+                            modifier = Modifier.size(15.dp),
+                            strokeWidth = 2.dp,
+                            color = Color.White
+                        )
+                        Spacer(Modifier.width(6.dp))
+                        Text("Đang lấy giá...", fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                    } else {
+                        Icon(
+                            imageVector = Icons.Default.Refresh,
+                            contentDescription = null,
+                            modifier = Modifier.size(16.dp)
+                        )
+                        Spacer(Modifier.width(5.dp))
+                        Text("Cập nhật giá Online", fontSize = 12.sp, fontWeight = FontWeight.Bold)
                     }
+                }
+
+                OutlinedButton(
+                    onClick = onOpenManualPrice,
+                    modifier = Modifier.weight(1f),
+                    contentPadding = PaddingValues(horizontal = 10.dp, vertical = 8.dp)
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Edit,
+                        contentDescription = null,
+                        modifier = Modifier.size(15.dp)
+                    )
+                    Spacer(Modifier.width(5.dp))
+                    Text("Nhập / Chỉnh giá", fontSize = 12.sp, fontWeight = FontWeight.Bold)
                 }
             }
 
@@ -720,12 +808,6 @@ private fun RealtimePriceBannerCard(
                         overflow = TextOverflow.Ellipsis
                     )
                 }
-                Text(
-                    text = "Cập nhật ngay",
-                    fontSize = 11.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = PetrolBlue
-                )
             }
         }
     }
@@ -937,8 +1019,11 @@ private fun SmartAddFuelBottomSheet(
     profile: CarProfile,
     existingRecords: List<FuelRecordEntity>,
     editingRecord: FuelRecordEntity?,
+    isSyncingPrice: Boolean,
     getPriceForDate: (Long) -> Double,
     getMatchedPeriod: (Long) -> FuelPricePeriodEntity?,
+    onRefreshOnlinePrice: ((Double) -> Unit) -> Unit,
+    onOpenManualPriceDialog: () -> Unit,
     onDismiss: () -> Unit,
     onSave: (
         id: String?,
@@ -1142,6 +1227,52 @@ private fun SmartAddFuelBottomSheet(
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                     singleLine = true,
                     modifier = Modifier.weight(1f)
+                )
+            }
+
+            // Nút cập nhật giá xăng chủ động ngay trong màn hình Ghi Đổ Xăng
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                AssistChip(
+                    onClick = {
+                        onRefreshOnlinePrice { newPrice ->
+                            if (newPrice > 0) {
+                                unitPriceText = newPrice.toLong().toString()
+                            }
+                        }
+                    },
+                    enabled = !isSyncingPrice,
+                    leadingIcon = {
+                        if (isSyncingPrice) {
+                            CircularProgressIndicator(modifier = Modifier.size(14.dp), strokeWidth = 2.dp)
+                        } else {
+                            Icon(Icons.Default.Refresh, contentDescription = null, modifier = Modifier.size(15.dp))
+                        }
+                    },
+                    label = {
+                        Text(
+                            text = if (isSyncingPrice) "Đang lấy giá mới..." else "Lấy giá Petrolimex mới nhất",
+                            fontSize = 11.sp,
+                            fontWeight = FontWeight.Bold
+                        )
+                    }
+                )
+
+                AssistChip(
+                    onClick = onOpenManualPriceDialog,
+                    leadingIcon = {
+                        Icon(Icons.Default.Edit, contentDescription = null, modifier = Modifier.size(15.dp))
+                    },
+                    label = {
+                        Text(
+                            text = "Cập nhật kỳ giá",
+                            fontSize = 11.sp,
+                            fontWeight = FontWeight.Bold
+                        )
+                    }
                 )
             }
 
@@ -1384,31 +1515,53 @@ private fun PriceAndAnalyticsTabContent(
                 elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
             ) {
                 Column(modifier = Modifier.padding(16.dp)) {
+                    Text(
+                        text = "BẢNG GIÁ BÁN LẺ PETROLIMEX",
+                        fontWeight = FontWeight.Black,
+                        fontSize = 15.sp
+                    )
+                    Text(
+                        text = syncStatus,
+                        fontSize = 11.sp,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+
+                    Spacer(Modifier.height(10.dp))
+
                     Row(
                         modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
-                        Column(modifier = Modifier.weight(1f)) {
-                            Text(
-                                text = "BẢNG GIÁ BÁN LẺ PETROLIMEX",
-                                fontWeight = FontWeight.Black,
-                                fontSize = 15.sp
-                            )
-                            Text(
-                                text = syncStatus,
-                                fontSize = 11.sp,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
-                            )
-                        }
-                        OutlinedButton(
+                        Button(
                             onClick = onRefreshLive,
                             enabled = !isSyncing,
-                            contentPadding = PaddingValues(horizontal = 10.dp, vertical = 4.dp)
+                            modifier = Modifier.weight(1.15f),
+                            colors = ButtonDefaults.buttonColors(containerColor = PetrolBlue),
+                            contentPadding = PaddingValues(horizontal = 10.dp, vertical = 8.dp)
                         ) {
-                            Icon(Icons.Default.Refresh, contentDescription = null, modifier = Modifier.size(15.dp))
-                            Spacer(Modifier.width(4.dp))
-                            Text("Làm mới", fontSize = 12.sp)
+                            if (isSyncing) {
+                                CircularProgressIndicator(
+                                    modifier = Modifier.size(15.dp),
+                                    strokeWidth = 2.dp,
+                                    color = Color.White
+                                )
+                                Spacer(Modifier.width(6.dp))
+                                Text("Đang tải...", fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                            } else {
+                                Icon(Icons.Default.Refresh, contentDescription = null, modifier = Modifier.size(16.dp))
+                                Spacer(Modifier.width(5.dp))
+                                Text("Cập nhật Online", fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                            }
+                        }
+
+                        OutlinedButton(
+                            onClick = onOpenManualPrice,
+                            modifier = Modifier.weight(1f),
+                            contentPadding = PaddingValues(horizontal = 10.dp, vertical = 8.dp)
+                        ) {
+                            Icon(Icons.Default.Edit, contentDescription = null, modifier = Modifier.size(15.dp))
+                            Spacer(Modifier.width(5.dp))
+                            Text("Nhập giá chủ động", fontSize = 12.sp, fontWeight = FontWeight.Bold)
                         }
                     }
 
@@ -1818,10 +1971,12 @@ private fun CarAndBackupTabContent(
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
 @Composable
 private fun ManualUpdatePriceDialog(
     currentPrice: Double,
+    isSyncingOnline: Boolean,
+    onFetchOnlinePrice: ((Double, Double) -> Unit) -> Unit,
     onDismiss: () -> Unit,
     onConfirm: (zone1: Double, zone2: Double, effectiveEpochMillis: Long, note: String) -> Unit
 ) {
@@ -1844,13 +1999,45 @@ private fun ManualUpdatePriceDialog(
         mutableStateOf("Kỳ điều hành 15h00 ngày ${FormatUtils.formatDateOnly(effectiveEpochMillis)}")
     }
 
+    fun applyZone2Price(newZ2: Int) {
+        val validZ2 = newZ2.coerceAtLeast(10_000)
+        zone2Input = validZ2.toString()
+        zone1Input = (((validZ2 / 1.02) / 10.0).roundToInt() * 10).toString()
+    }
+
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text("Thêm / Cập Nhật Kỳ Giá Xăng", fontWeight = FontWeight.Bold) },
+        title = { Text("Cập Nhật Giá Xăng Chủ Động", fontWeight = FontWeight.Bold) },
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                Button(
+                    onClick = {
+                        onFetchOnlinePrice { z1, z2 ->
+                            if (z2 > 0) zone2Input = z2.toInt().toString()
+                            if (z1 > 0) zone1Input = z1.toInt().toString()
+                        }
+                    },
+                    enabled = !isSyncingOnline,
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = ButtonDefaults.buttonColors(containerColor = PetrolBlue)
+                ) {
+                    if (isSyncingOnline) {
+                        CircularProgressIndicator(
+                            modifier = Modifier.size(16.dp),
+                            strokeWidth = 2.dp,
+                            color = Color.White
+                        )
+                        Spacer(Modifier.width(8.dp))
+                        Text("Đang lấy giá Petrolimex...", fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                    } else {
+                        Icon(Icons.Default.Refresh, contentDescription = null, modifier = Modifier.size(16.dp))
+                        Spacer(Modifier.width(6.dp))
+                        Text("Tải Giá Petrolimex Mới Nhất Từ Mạng", fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                    }
+                }
+
                 Text(
-                    "Mốc áp dụng mặc định là 15h00 chiều ngày điều hành (Thứ 2 / Thứ 5):",
+                    "Hoặc tự nhập / bấm cộng trừ nhanh theo giá tại trụ bơm (mốc áp dụng 15h00 chiều):",
                     fontSize = 12.sp,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
@@ -1877,6 +2064,30 @@ private fun ManualUpdatePriceDialog(
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                     singleLine = true
                 )
+
+                // Nút cộng/trừ nhanh giá xăng theo bước điều chỉnh
+                FlowRow(
+                    horizontalArrangement = Arrangement.spacedBy(6.dp),
+                    verticalArrangement = Arrangement.spacedBy(4.dp)
+                ) {
+                    listOf(-500, -200, -100, +100, +200, +500).forEach { delta ->
+                        val sign = if (delta > 0) "+" else ""
+                        AssistChip(
+                            onClick = {
+                                val currentZ2 = zone2Input.toIntOrNull() ?: currentPrice.toInt()
+                                applyZone2Price(currentZ2 + delta)
+                            },
+                            label = {
+                                Text(
+                                    text = "$sign${delta}đ",
+                                    fontSize = 11.sp,
+                                    fontWeight = FontWeight.Bold
+                                )
+                            }
+                        )
+                    }
+                }
+
                 OutlinedTextField(
                     value = zone1Input,
                     onValueChange = { zone1Input = it.filter { ch -> ch.isDigit() } },
@@ -1898,9 +2109,10 @@ private fun ManualUpdatePriceDialog(
                     val z2 = zone2Input.toDoubleOrNull() ?: currentPrice
                     val z1 = zone1Input.toDoubleOrNull() ?: z2
                     onConfirm(z1, z2, effectiveEpochMillis, noteInput)
-                }
+                },
+                colors = ButtonDefaults.buttonColors(containerColor = FuelOrange)
             ) {
-                Text("Lưu kỳ giá")
+                Text("Lưu Giá Mới", fontWeight = FontWeight.Bold)
             }
         },
         dismissButton = {

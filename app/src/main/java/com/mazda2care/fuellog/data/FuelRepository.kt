@@ -105,7 +105,8 @@ class FuelRepository(private val context: Context, private val dao: FuelDao) {
         val result = FuelPriceFetcher.fetchLatestPetrolimexPrices()
         if (result.success && result.items.isNotEmpty()) {
             val encoded = FuelPriceFetcher.encodeItemsToJson(result.items)
-            val noteText = "${result.updatedTitle}"
+            val nowFormatted = FormatUtils.formatDateTime(System.currentTimeMillis())
+            val noteText = "${result.updatedTitle} • Kiểm tra: $nowFormatted"
             prefs.edit()
                 .putString("cached_live_fuels_json", encoded)
                 .putString("last_sync_note", noteText)
@@ -137,6 +138,13 @@ class FuelRepository(private val context: Context, private val dao: FuelDao) {
                 kotlin.math.abs(latestPeriod.priceZone2 - ron95_3.priceZone2) >= 10.0 ||
                 kotlin.math.abs(latestPeriod.priceZone1 - ron95_3.priceZone1) >= 10.0
 
+            val effectiveMillisToSave = if (latestPeriod != null && result.effectiveEpochMillis < latestPeriod.epochMillis && isDifferentPrice) {
+                // Đảm bảo kỳ giá thực tế vừa cập nhật có hiệu lực mới nhất nếu DB đang chứa dữ liệu mẫu
+                maxOf(result.effectiveEpochMillis, System.currentTimeMillis())
+            } else {
+                result.effectiveEpochMillis
+            }
+
             if (isDifferentPrice) {
                 val deltaZone2 = if (latestPeriod != null) {
                     (ron95_3.priceZone2 - latestPeriod.priceZone2).toInt()
@@ -149,8 +157,8 @@ class FuelRepository(private val context: Context, private val dao: FuelDao) {
 
                 val newPeriod = FuelPricePeriodEntity(
                     id = UUID.randomUUID().toString().uppercase(),
-                    effectiveDateIso = FormatUtils.millisToIso(result.effectiveEpochMillis),
-                    epochMillis = result.effectiveEpochMillis,
+                    effectiveDateIso = FormatUtils.millisToIso(effectiveMillisToSave),
+                    epochMillis = effectiveMillisToSave,
                     priceZone1 = ron95_3.priceZone1,
                     priceZone2 = ron95_3.priceZone2,
                     note = "Kỳ điều hành 15h00 ngày ${FormatUtils.formatDateOnly(result.effectiveEpochMillis)}$deltaStr",
@@ -204,6 +212,23 @@ class FuelRepository(private val context: Context, private val dao: FuelDao) {
         effectiveEpochMillis: Long,
         note: String
     ) = withContext(Dispatchers.IO) {
+        val profile = getCarProfile()
+        val updatedLiveItems = getCachedLiveFuelItems().map { item ->
+            if (item.product == profile.selectedFuelProduct) {
+                item.copy(priceZone1 = priceZone1, priceZone2 = priceZone2)
+            } else {
+                item
+            }
+        }
+        val encodedLive = FuelPriceFetcher.encodeItemsToJson(updatedLiveItems)
+        val nowFormatted = FormatUtils.formatDateTime(System.currentTimeMillis())
+
+        prefs.edit()
+            .putString("cached_live_fuels_json", encodedLive)
+            .putString("last_sync_note", "Cập nhật chủ động • $nowFormatted")
+            .putLong("last_sync_epoch", System.currentTimeMillis())
+            .apply()
+
         val period = FuelPricePeriodEntity(
             id = UUID.randomUUID().toString().uppercase(),
             effectiveDateIso = FormatUtils.millisToIso(effectiveEpochMillis),
@@ -211,17 +236,13 @@ class FuelRepository(private val context: Context, private val dao: FuelDao) {
             priceZone1 = priceZone1,
             priceZone2 = priceZone2,
             note = note.ifBlank { "Kỳ điều hành 15h00 ngày ${FormatUtils.formatDateOnly(effectiveEpochMillis)}" },
-            isAutoFetched = false
+            isAutoFetched = false,
+            allFuelsJson = encodedLive
         )
         dao.insertFuelPricePeriod(period)
 
-        val allPeriods = dao.getAllFuelPricePeriods()
-        val latest = allPeriods.maxByOrNull { it.epochMillis }
-        if (latest != null && latest.id == period.id) {
-            val profile = getCarProfile()
-            val newActive = if (profile.selectedPriceZone == PriceZone.ZONE_1) priceZone1 else priceZone2
-            saveCarProfile(profile.copy(currentFuelPrice = newActive))
-        }
+        val newActive = if (profile.selectedPriceZone == PriceZone.ZONE_1) priceZone1 else priceZone2
+        saveCarProfile(profile.copy(currentFuelPrice = newActive))
     }
 
     private suspend fun recalculateTripsAndEfficiency() {
