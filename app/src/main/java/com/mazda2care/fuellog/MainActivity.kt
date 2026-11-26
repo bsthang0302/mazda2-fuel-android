@@ -1,5 +1,6 @@
 package com.mazda2care.fuellog
 
+import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
 import androidx.activity.ComponentActivity
@@ -26,18 +27,28 @@ class MainActivity : ComponentActivity() {
                 val snackbarHostState = remember { SnackbarHostState() }
                 val scope = rememberCoroutineScope()
 
-                // Trình chọn nơi lưu file sao lưu JSON (CreateDocument)
+                // Trình chọn nơi lưu file sao lưu JSON (CreateDocument) + Tự động cấp quyền ghi ngầm vĩnh viễn
                 val exportLauncher = rememberLauncherForActivityResult(
                     contract = ActivityResultContracts.CreateDocument("application/json")
                 ) { uri: Uri? ->
                     if (uri != null) {
+                        try {
+                            contentResolver.takePersistableUriPermission(
+                                uri,
+                                Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_GRANT_WRITE_URI_PERMISSION
+                            )
+                        } catch (_: Exception) {
+                        }
                         fuelViewModel.exportBackupJson { jsonContent ->
                             try {
-                                contentResolver.openOutputStream(uri)?.use { out ->
+                                contentResolver.openOutputStream(uri, "wt")?.use { out ->
+                                    out.write(jsonContent.toByteArray(Charsets.UTF_8))
+                                } ?: contentResolver.openOutputStream(uri)?.use { out ->
                                     out.write(jsonContent.toByteArray(Charsets.UTF_8))
                                 }
+                                fuelViewModel.registerLinkedBackupUri(uri.toString())
                                 scope.launch {
-                                    snackbarHostState.showSnackbar("Đã xuất file sao lưu mazda2_car_data.json thành công!")
+                                    snackbarHostState.showSnackbar("✓ Đã lưu & bật Tự Động Sao Lưu Ngầm mỗi khi bạn ghi đổ xăng!")
                                 }
                             } catch (e: Exception) {
                                 scope.launch {
@@ -48,12 +59,20 @@ class MainActivity : ComponentActivity() {
                     }
                 }
 
-                // Trình chọn file JSON để nhập dữ liệu (OpenDocument)
+                // Trình chọn file JSON để nhập dữ liệu (OpenDocument) + Tự động liên kết làm file sao lưu ngầm
                 val importLauncher = rememberLauncherForActivityResult(
                     contract = ActivityResultContracts.OpenDocument()
                 ) { uri: Uri? ->
                     if (uri != null) {
                         try {
+                            try {
+                                contentResolver.takePersistableUriPermission(
+                                    uri,
+                                    Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_GRANT_WRITE_URI_PERMISSION
+                                )
+                                fuelViewModel.registerLinkedBackupUri(uri.toString())
+                            } catch (_: Exception) {
+                            }
                             val rawJson = contentResolver.openInputStream(uri)
                                 ?.bufferedReader(Charsets.UTF_8)
                                 ?.use { it.readText() }
@@ -62,7 +81,7 @@ class MainActivity : ComponentActivity() {
                                     scope.launch {
                                         res.fold(
                                             onSuccess = { count ->
-                                                snackbarHostState.showSnackbar("Đã nhập thành công $count bản ghi đổ xăng!")
+                                                snackbarHostState.showSnackbar("✓ Đã khôi phục $count lần đổ xăng & bật Tự Động Sao Lưu Ngầm!")
                                             },
                                             onFailure = { err ->
                                                 snackbarHostState.showSnackbar("File JSON không hợp lệ: ${err.localizedMessage}")

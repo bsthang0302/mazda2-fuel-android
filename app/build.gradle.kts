@@ -13,17 +13,31 @@ android {
         applicationId = "com.mazda2care.fuellog"
         minSdk = 26
         targetSdk = 35
-        versionCode = 7
-        versionName = "1.0.7"
+        versionCode = 8
+        versionName = "1.0.8"
 
         vectorDrawables {
             useSupportLibrary = true
         }
     }
 
+    signingConfigs {
+        create("fixedSigning") {
+            storeFile = file("mazda2-signing.p12")
+            storePassword = "mazda2care2026"
+            keyAlias = "mazda2key"
+            keyPassword = "mazda2care2026"
+            storeType = "PKCS12"
+        }
+    }
+
     buildTypes {
+        debug {
+            signingConfig = signingConfigs.getByName("fixedSigning")
+        }
         release {
             isMinifyEnabled = false
+            signingConfig = signingConfigs.getByName("fixedSigning")
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"

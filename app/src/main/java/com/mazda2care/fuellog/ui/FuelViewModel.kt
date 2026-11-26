@@ -42,6 +42,22 @@ class FuelViewModel(application: Application) : AndroidViewModel(application) {
     private val _syncStatusMessage = MutableStateFlow(repo.getLastSyncNote())
     val syncStatusMessage: StateFlow<String> = _syncStatusMessage.asStateFlow()
 
+    private val _autoBackupStatus = MutableStateFlow(repo.getLastAutoBackupStatus())
+    val autoBackupStatus: StateFlow<String> = _autoBackupStatus.asStateFlow()
+
+    private val _isAutoBackupLinked = MutableStateFlow(!repo.getLinkedAutoBackupUri().isNullOrBlank())
+    val isAutoBackupLinked: StateFlow<Boolean> = _isAutoBackupLinked.asStateFlow()
+
+    private fun refreshAutoBackupState() {
+        _autoBackupStatus.value = repo.getLastAutoBackupStatus()
+        _isAutoBackupLinked.value = !repo.getLinkedAutoBackupUri().isNullOrBlank()
+    }
+
+    fun registerLinkedBackupUri(uriString: String) {
+        repo.setLinkedAutoBackupUri(uriString)
+        refreshAutoBackupState()
+    }
+
     init {
         viewModelScope.launch {
             repo.ensureSeeded()
@@ -92,6 +108,10 @@ class FuelViewModel(application: Application) : AndroidViewModel(application) {
     fun updateCarProfile(updated: CarProfile) {
         repo.saveCarProfile(updated)
         _profile.value = updated
+        viewModelScope.launch {
+            repo.performAutoBackupIfLinked()
+            refreshAutoBackupState()
+        }
     }
 
     fun addOrUpdateFuelRecord(
@@ -114,12 +134,14 @@ class FuelViewModel(application: Application) : AndroidViewModel(application) {
                 isFullTank = isFullTank
             )
             _profile.value = repo.getCarProfile()
+            refreshAutoBackupState()
         }
     }
 
     fun deleteFuelRecord(record: FuelRecordEntity) {
         viewModelScope.launch {
             repo.deleteFuelRecord(record)
+            refreshAutoBackupState()
         }
     }
 

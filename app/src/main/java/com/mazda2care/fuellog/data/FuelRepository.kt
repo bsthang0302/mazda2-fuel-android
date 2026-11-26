@@ -1,6 +1,7 @@
 package com.mazda2care.fuellog.data
 
 import android.content.Context
+import android.net.Uri
 import com.mazda2care.fuellog.model.CarProfile
 import com.mazda2care.fuellog.model.FormatUtils
 import com.mazda2care.fuellog.model.FuelPricePeriodEntity
@@ -101,6 +102,64 @@ class FuelRepository(private val context: Context, private val dao: FuelDao) {
         return prefs.getString("last_sync_note", "Kỳ điều hành gần nhất • Đã lưu offline") ?: ""
     }
 
+    fun getLinkedAutoBackupUri(): String? {
+        return prefs.getString("linked_auto_backup_uri", null)
+    }
+
+    fun getLastAutoBackupStatus(): String {
+        val uri = getLinkedAutoBackupUri()
+        val lastTime = prefs.getString("last_auto_backup_time", null)
+        return if (!uri.isNullOrBlank()) {
+            if (!lastTime.isNullOrBlank()) {
+                "Đang bật tự động sao lưu ngầm • Lần cuối: $lastTime"
+            } else {
+                "Đang bật tự động sao lưu ngầm ra file JSON đã chọn"
+            }
+        } else {
+            "Chưa liên kết file tự động sao lưu (Bấm 'Xuất file JSON' 1 lần để kích hoạt)"
+        }
+    }
+
+    fun setLinkedAutoBackupUri(uriString: String) {
+        val nowStr = FormatUtils.formatDateTime(System.currentTimeMillis())
+        prefs.edit()
+            .putString("linked_auto_backup_uri", uriString)
+            .putString("last_auto_backup_time", nowStr)
+            .apply()
+    }
+
+    suspend fun performAutoBackupIfLinked() = withContext(Dispatchers.IO) {
+        val jsonContent = try {
+            exportToJsonString()
+        } catch (_: Exception) {
+            return@withContext
+        }
+
+        // 1. Luôn lưu một bản sao lưu nội bộ dự phòng
+        try {
+            context.openFileOutput("mazda2_internal_autobackup.json", Context.MODE_PRIVATE).use { out ->
+                out.write(jsonContent.toByteArray(Charsets.UTF_8))
+            }
+        } catch (_: Exception) {
+        }
+
+        // 2. Nếu người dùng đã chọn file JSON ngoài bộ nhớ máy (Downloads / Google Drive), tự động ghi đè ngầm
+        val linkedUriStr = getLinkedAutoBackupUri()
+        if (!linkedUriStr.isNullOrBlank()) {
+            try {
+                val uri = Uri.parse(linkedUriStr)
+                context.contentResolver.openOutputStream(uri, "wt")?.use { out ->
+                    out.write(jsonContent.toByteArray(Charsets.UTF_8))
+                } ?: context.contentResolver.openOutputStream(uri)?.use { out ->
+                    out.write(jsonContent.toByteArray(Charsets.UTF_8))
+                }
+                val nowStr = FormatUtils.formatDateTime(System.currentTimeMillis())
+                prefs.edit().putString("last_auto_backup_time", nowStr).apply()
+            } catch (_: Exception) {
+            }
+        }
+    }
+
     suspend fun syncLiveFuelPrices(): LiveFuelFetchResult = withContext(Dispatchers.IO) {
         val result = FuelPriceFetcher.fetchLatestPetrolimexPrices()
         if (result.success && result.items.isNotEmpty()) {
@@ -199,11 +258,13 @@ class FuelRepository(private val context: Context, private val dao: FuelDao) {
         if (odo > profile.currentOdo) {
             saveCarProfile(profile.copy(currentOdo = odo))
         }
+        performAutoBackupIfLinked()
     }
 
     suspend fun deleteFuelRecord(record: FuelRecordEntity) = withContext(Dispatchers.IO) {
         dao.deleteFuelRecord(record)
         recalculateTripsAndEfficiency()
+        performAutoBackupIfLinked()
     }
 
     suspend fun addManualPricePeriod(

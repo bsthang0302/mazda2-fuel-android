@@ -139,6 +139,8 @@ fun MainScreen(
     val liveItems by viewModel.liveFuelItems.collectAsState()
     val isSyncing by viewModel.isSyncingPrice.collectAsState()
     val syncStatus by viewModel.syncStatusMessage.collectAsState()
+    val autoBackupStatus by viewModel.autoBackupStatus.collectAsState()
+    val isAutoBackupLinked by viewModel.isAutoBackupLinked.collectAsState()
     val coroutineScope = rememberCoroutineScope()
 
     var selectedTab by remember { mutableIntStateOf(0) }
@@ -317,6 +319,8 @@ fun MainScreen(
                 4 -> CarAndBackupTabContent(
                     profile = profile,
                     recordsCount = records.size,
+                    autoBackupStatus = autoBackupStatus,
+                    isAutoBackupLinked = isAutoBackupLinked,
                     onSaveProfile = { updated -> viewModel.updateCarProfile(updated) },
                     onExportJsonClick = onExportJsonClick,
                     onImportJsonClick = onImportJsonClick
@@ -1802,6 +1806,8 @@ private fun PriceHistoryChartCard(
 private fun CarAndBackupTabContent(
     profile: CarProfile,
     recordsCount: Int,
+    autoBackupStatus: String,
+    isAutoBackupLinked: Boolean,
     onSaveProfile: (CarProfile) -> Unit,
     onExportJsonClick: () -> Unit,
     onImportJsonClick: () -> Unit
@@ -1831,12 +1837,27 @@ private fun CarAndBackupTabContent(
                 verticalArrangement = Arrangement.spacedBy(10.dp)
             ) {
                 Text(
-                    text = "SAO LƯU OFFLINE & ĐỒNG BỘ MAC (JSON)",
+                    text = "BẢO VỆ NHẬT KÝ KHI CẬP NHẬT & TỰ ĐỘNG SAO LƯU",
                     fontWeight = FontWeight.Black,
                     fontSize = 14.sp
                 )
+
+                Surface(
+                    color = if (isAutoBackupLinked) EcoGreen.copy(alpha = 0.12f) else FuelOrange.copy(alpha = 0.12f),
+                    shape = RoundedCornerShape(10.dp),
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Text(
+                        text = if (isAutoBackupLinked) "✓ $autoBackupStatus" else "⚡ $autoBackupStatus",
+                        fontSize = 12.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = if (isAutoBackupLinked) EcoGreen else FuelOrange,
+                        modifier = Modifier.padding(10.dp)
+                    )
+                }
+
                 Text(
-                    text = "Dữ liệu được lưu trữ an toàn ngay trên điện thoại (Room SQLite - hiện có $recordsCount bản ghi). Định dạng file JSON tương thích 100% với file mazda2_car_data.json trên ứng dụng Mazda2Care của máy Mac.",
+                    text = "• Cài đè trực tiếp không mất dữ liệu: Từ bản v1.0.8 trở đi, APK đã có chữ ký cố định. Mỗi khi tải bản mới, bạn chỉ cần bấm 'Cập nhật' đè lên (KHÔNG gỡ ứng dụng cũ), toàn bộ $recordsCount lần đổ xăng sẽ giữ nguyên 100%.\n• Tự động sao lưu thời gian thực: Chỉ cần bấm 'Xuất file JSON' 1 lần để chọn nơi lưu trên máy, từ đó mỗi lần bạn bấm Lưu đổ xăng, app sẽ tự động ghi ngầm vào file đó!",
                     fontSize = 12.sp,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
@@ -1852,7 +1873,7 @@ private fun CarAndBackupTabContent(
                     ) {
                         Icon(Icons.Default.FileUpload, contentDescription = null, modifier = Modifier.size(18.dp))
                         Spacer(Modifier.width(6.dp))
-                        Text("Xuất file JSON")
+                        Text(if (isAutoBackupLinked) "Sao lưu JSON" else "Bật Sao Lưu Tự Động", fontSize = 12.sp)
                     }
                     OutlinedButton(
                         onClick = onImportJsonClick,
@@ -1860,7 +1881,7 @@ private fun CarAndBackupTabContent(
                     ) {
                         Icon(Icons.Default.FileDownload, contentDescription = null, modifier = Modifier.size(18.dp))
                         Spacer(Modifier.width(6.dp))
-                        Text("Nhập file JSON")
+                        Text("Khôi phục JSON", fontSize = 12.sp)
                     }
                 }
             }
